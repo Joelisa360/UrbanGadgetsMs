@@ -1,0 +1,347 @@
+﻿@model dynamic
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-4">Business Reports</h2>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <button class="nav-link active"
+                data-bs-toggle="tab"
+                data-bs-target="#daily">
+            Daily Sales Report
+        </button>
+    </li>
+
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#weekly">
+            Weekly Sales Report
+        </button>
+    </li>
+
+    <li class="nav-item">
+        <button class="nav-link"
+                data-bs-toggle="tab"
+                data-bs-target="#restock">
+            Restock Reports
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- DAILY -->
+    <div class="tab-pane fade show active" id="daily">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body">
+                <h5>Today's Transactions</h5>
+
+                <table class="table table-hover mt-3">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Cashier</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in ViewBag.DailySales)
+                        {
+                            <tr>
+                                <td>@s.ReceiptNumber</td>
+                                <td>@s.Product?.ProductName</td>
+                                <td>@s.Quantity</td>
+                                <td>UGX @s.TotalAmount.ToString("N0")</td>
+                                <td>@s.CashierName</td>
+                                <td>@s.SaleDate.ToString("hh:mm tt")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- WEEKLY -->
+    <div class="tab-pane fade" id="weekly">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body">
+                <h5>This Week's Sales</h5>
+
+                <table class="table table-hover mt-3">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Receipt</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Cashier</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in ViewBag.WeeklySales)
+                        {
+                            <tr>
+                                <td>@s.ReceiptNumber</td>
+                                <td>@s.Product?.ProductName</td>
+                                <td>@s.Quantity</td>
+                                <td>UGX @s.TotalAmount.ToString("N0")</td>
+                                <td>@s.CashierName</td>
+                                <td>@s.SaleDate.ToString("dd MMM yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESTOCK -->
+    <div class="tab-pane fade" id="restock">
+
+        <div class="d-flex justify-content-between mb-3">
+            <h5>Create Restock</h5>
+
+            <button type="button"
+                    class="btn btn-primary"
+                    onclick="addRow()">
+                + Add Item
+            </button>
+        </div>
+
+        <form asp-controller="Report"
+              asp-action="SaveRestock"
+              method="post">
+
+            <div class="card shadow-sm border-0 rounded-4 mb-4">
+                <div class="card-body">
+
+                    <table class="table table-bordered" id="restockTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Qty</th>
+                                <th>Buying</th>
+                                <th>Selling</th>
+                                <th width="70"></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <input name="Items[0].ProductName"
+                                           class="form-control product-name"
+                                           placeholder="Product name" />
+                                </td>
+
+                                <td>
+                                    <select name="Items[0].CategoryName"
+                                            class="form-control category-select">
+                                        <option value="">Select category</option>
+
+                                        @foreach (var c in ViewBag.Categories)
+                                        {
+                                            <option value="@c.CategoryName">
+                                                @c.CategoryName
+                                            </option>
+                                        }
+
+                                        <option value="__new">+ Add Category</option>
+                                    </select>
+                                </td>
+
+                                <td>
+                                    <input name="Items[0].Quantity"
+                                           type="number"
+                                           class="form-control"
+                                           min="1" />
+                                </td>
+
+                                <td>
+                                    <input name="Items[0].BuyingPrice"
+                                           type="number"
+                                           class="form-control buying-price" />
+                                </td>
+
+                                <td>
+                                    <input name="Items[0].Price"
+                                           type="number"
+                                           class="form-control selling-price"
+                                           min="0" />
+                                </td>
+
+                                <td>
+                                    <button type="button"
+                                            class="btn btn-danger btn-sm"
+                                            onclick="removeRow(this)">
+                                        X
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <button class="btn btn-success">
+                        Save Restock
+                    </button>
+
+                </div>
+            </div>
+        </form>
+
+        <h5 class="mb-3">Previous Restock Reports</h5>
+
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Report No</th>
+                    <th>Total</th>
+                    <th>Created By</th>
+                    <th width="120">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var r in ViewBag.Restocks)
+                {
+                    <tr>
+                        <td>@r.ReportDate.ToString("dd MMM yyyy")</td>
+                        <td>@r.ReportNumber</td>
+                        <td>UGX @r.TotalAmount.ToString("N0")</td>
+                        <td>@r.CreatedBy</td>
+                        <td>
+                            <a asp-action="ViewReport"
+                               asp-route-id="@r.Id"
+                               class="btn btn-sm btn-info text-white">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+    let rowIndex = 1;
+
+    function addRow() {
+
+        let categories = `
+            <option value="">Select category</option>
+            @foreach (var c in ViewBag.Categories)
+            {
+                    <text>
+                        <option value="@c.CategoryName">@c.CategoryName</option>
+                    </text>
+            }
+            <option value="__new">+ Add Category</option>
+        `;
+
+        let row = `
+        <tr>
+            <td>
+                <input name="Items[${rowIndex}].ProductName"
+                       class="form-control product-name"
+                       placeholder="Product name" />
+            </td>
+
+            <td>
+                <select name="Items[${rowIndex}].CategoryName"
+                        class="form-control category-select">
+                    ${categories}
+                </select>
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].Quantity"
+                       type="number"
+                       class="form-control"
+                       min="1" />
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].BuyingPrice"
+                       type="number"
+                       class="form-control"
+                       min="0" />
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].Price"
+                       type="number"
+                       class="form-control selling-price"
+                       min="0" />
+            </td>
+
+            <td>
+                <button type="button"
+                        class="btn btn-danger btn-sm"
+                        onclick="removeRow(this)">
+                    X
+                </button>
+            </td>
+        </tr>`;
+
+        document.querySelector("#restockTable tbody")
+            .insertAdjacentHTML("beforeend", row);
+
+        rowIndex++;
+    }
+
+    function removeRow(btn) {
+        btn.closest("tr").remove();
+    }
+
+    $(document).on("change", ".product-name", function () {
+
+        let row = $(this).closest("tr");
+        let name = $(this).val();
+
+        $.get("/Report/GetProductInfo", { name }, function (res) {
+
+            if (res) {
+                row.find(".category-select").val(res.category);
+                row.find(".selling-price").val(res.price);
+            }
+
+        });
+
+    });
+
+    $(document).on("change", ".category-select", function () {
+
+        if ($(this).val() === "__new") {
+
+            let cat = prompt("Enter new category");
+
+            if (cat) {
+                $(this).append(
+                    `<option value="${cat}" selected>${cat}</option>`
+                );
+
+                $(this).val(cat);
+            }
+        }
+
+    });
+
+        if (res) {
+        row.find(".category-select").val(res.category);
+        row.find(".selling-price").val(res.price);
+        row.find(".buying-price").val(res.buying);
+    }
+</script>

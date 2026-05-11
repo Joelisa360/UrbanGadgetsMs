@@ -1,0 +1,158 @@
+﻿@model UrbanGadgets.Models.Sale
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f5f5;
+            font-family: Arial;
+        }
+
+        .receipt {
+            width: 380px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,.08);
+        }
+
+        .brand {
+            text-align: center;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .brand h2 {
+            margin: 0;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .total {
+            border-top: 1px dashed #ccc;
+            margin-top: 20px;
+            padding-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .buttons {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        @@media print {
+            .buttons {
+                display: none;
+            }
+
+            body {
+                background: white;
+            }
+
+            .receipt {
+                box-shadow: none;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="receipt">
+
+        <div class="brand">
+            <div class="logo">🛍</div>
+            <h2>UrbanGadgets</h2>
+            <small>Official Receipt</small>
+        </div>
+
+        <div class="item-row">
+            <span>Receipt #:</span>
+            <strong>@Model.ReceiptNumber</strong>
+        </div>
+
+        <div class="item-row">
+            <span>Date:</span>
+            <strong>@Model.SaleDate.ToString("dd MMM yyyy HH:mm")</strong>
+        </div>
+
+        <div class="item-row">
+            <span>Cashier:</span>
+            <strong>@Model.CashierName</strong>
+        </div>
+
+        <hr />
+
+        <div class="item-row">
+            <span>Product:</span>
+            <strong>@ViewBag.Product?.ProductName</strong>
+        </div>
+
+        <div class="item-row">
+            <span>Category:</span>
+            <strong>@ViewBag.Category?.CategoryName</strong>
+        </div>
+
+        <div class="item-row">
+            <span>Quantity:</span>
+            <strong>@Model.Quantity</strong>
+        </div>
+
+        <div class="item-row total">
+            <span>Total:</span>
+            <strong>UGX @Model.TotalAmount.ToString("N0")</strong>
+        </div>
+
+        <div class="footer">
+            Thank you for shopping with us and we look forward to seeing you again 
+            <br><br>
+            For inquiries or complaints call:
+            <br>
+            +256703781808
+            <br>
+            +256780662299
+        </div>
+        <div class="buttons">
+            <button onclick="window.print()" class="btn btn-dark">
+                Print
+            </button>
+
+            <a asp-controller="Products" asp-action="Index" class="btn btn-secondary">
+                Back
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>

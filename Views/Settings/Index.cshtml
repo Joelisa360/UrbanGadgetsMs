@@ -1,0 +1,272 @@
+﻿@model UrbanGadgets.Models.AppSetting
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .settings-header {
+        background: #fff;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.06);
+    }
+
+    .settings-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.06);
+    }
+
+    .settings-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .setting-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+    .setting-label {
+        font-weight: 500;
+        color: #111827;
+    }
+
+    .setting-sub {
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    .form-switch .form-check-input {
+        width: 50px;
+        height: 25px;
+        cursor: pointer;
+    }
+
+    .setting-select {
+        width: 180px;
+        border-radius: 12px;
+    }
+
+    .action-btn {
+        border-radius: 14px;
+        padding: 10px 18px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="settings-header">
+    <h2 class="fw-bold mb-1">
+        <i class="fa-solid fa-gear me-2"></i> Settings
+    </h2>
+    <p class="text-muted mb-0">
+        Customize how UrbanGadgets behaves
+    </p>
+</div>
+
+<form asp-action="Save" method="post">
+
+    <input type="hidden" asp-for="Id" />
+
+    <!-- Appearance -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fa-solid fa-palette text-primary"></i>
+            Appearance
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Dark Mode</div>
+                <div class="setting-sub">Switch app theme</div>
+            </div>
+            <div class="form-check form-switch">
+                <input asp-for="DarkMode" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Compact Tables</div>
+                <div class="setting-sub">Show smaller table rows</div>
+            </div>
+            <div class="form-check form-switch">
+                <input asp-for="CompactTables" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Theme Color</div>
+                <div class="setting-sub">Choose app accent color</div>
+            </div>
+            <select asp-for="ThemeColor" class="form-select setting-select">
+                <option>Blue</option>
+                <option>Green</option>
+                <option>Purple</option>
+                <option>Red</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fa-solid fa-bell text-warning"></i>
+            Notifications
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Low Stock Alerts</div>
+            <div class="form-check form-switch">
+                <input asp-for="LowStockAlerts" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Expense Alerts</div>
+            <div class="form-check form-switch">
+                <input asp-for="ExpenseAlerts" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Popup Notifications</div>
+            <div class="form-check form-switch">
+                <input asp-for="PopupNotifications" class="form-check-input" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Security -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fa-solid fa-lock text-danger"></i>
+            Security
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Enable PIN Lock</div>
+                <div class="setting-sub">Use PIN for quick security</div>
+            </div>
+            <div class="form-check form-switch">
+                <input asp-for="PinLock" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Set Security PIN</div>
+                <div class="setting-sub">4-digit security PIN</div>
+            </div>
+            <input asp-for="PinCode"
+                   type="text"
+                   maxlength="4"
+                   pattern="[0-9]{4}"
+                   inputmode="numeric"
+                   autocomplete="off"
+                   class="form-control"
+                   style="width:150px;"
+                   placeholder="****" />
+        </div>
+
+        <div class="setting-row">
+            <div>
+                <div class="setting-label">Require PIN on Login</div>
+                <div class="setting-sub">Ask for PIN after password</div>
+            </div>
+            <div class="form-check form-switch">
+                <input asp-for="RequirePinOnLogin"
+                       class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Auto Logout</div>
+            <select asp-for="AutoLogout" class="form-select setting-select">
+                <option>5 Minutes</option>
+                <option>15 Minutes</option>
+                <option>30 Minutes</option>
+                <option>Never</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Sales -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fa-solid fa-cart-shopping text-success"></i>
+            Sales
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Auto Print Receipt</div>
+            <div class="form-check form-switch">
+                <input asp-for="AutoPrintReceipt" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Confirm Before Sale</div>
+            <div class="form-check form-switch">
+                <input asp-for="ConfirmBeforeSale" class="form-check-input" />
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <div class="setting-label">Allow Discounts</div>
+            <div class="form-check form-switch">
+                <input asp-for="AllowDiscounts" class="form-check-input" />
+            </div>
+        </div>
+    </div>
+
+    <!--Monthly Expense Limit-->
+    <div class="setting-row">
+        <div>
+            <div class="setting-label">Monthly Expense Limit</div>
+            <div class="setting-sub">Warn when exceeded</div>
+        </div>
+
+        <input asp-for="MonthlyExpenseLimit"
+               class="form-control"
+               style="width:180px;" />
+    </div>
+
+    <!-- Backup -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fa-solid fa-database text-info"></i>
+            Backup & Data
+        </div>
+
+        <div class="d-flex gap-3 flex-wrap">
+            <button type="button" class="btn btn-primary action-btn">Backup Now</button>
+            <button type="button" class="btn btn-success action-btn">Export Sales</button>
+            <button type="button" class="btn btn-warning action-btn text-white">Clear Cache</button>
+            <button type="button" class="btn btn-danger action-btn">Reset Settings</button>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Save Settings
+    </button>
+
+</form>

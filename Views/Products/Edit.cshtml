@@ -1,0 +1,76 @@
+﻿@model UrbanGadgets.Models.Product
+@using UrbanGadgets.Models
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var categories = ViewBag.Categories as List<Category>;
+}
+
+<h2 class="mb-4">Edit Product</h2>
+
+<div class="card shadow-sm p-4">
+
+    <form asp-action="Edit" method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+        <!-- IMPORTANT -->
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="DateAdded" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="ProductName" class="form-label"></label>
+            <input asp-for="ProductName" class="form-control" />
+            <span asp-validation-for="ProductName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label>Category</label>
+            <select asp-for="CategoryId" class="form-control">
+                <option value="">-- Select Category --</option>
+
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat.Id" selected="@(cat.Id == Model.CategoryId)">
+                        @cat.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Quantity"></label>
+            <input asp-for="Quantity" type="number" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Price"></label>
+            <input asp-for="Price" type="number" step="0.01" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ReorderLevel"></label>
+            <input asp-for="ReorderLevel" type="number" class="form-control" />
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                Update
+            </button>
+
+            <a asp-action="Index" class="btn btn-secondary">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

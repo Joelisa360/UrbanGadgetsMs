@@ -1,0 +1,167 @@
+﻿@model List<UrbanGadgets.Models.Product>
+
+@{
+    ViewData["Title"] = "Products";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    bool isAdmin = User.IsInRole("Admin");
+}
+
+<style>
+    .sold-out {
+        background: #e5e7eb !important;
+        color: #6b7280;
+    }
+
+        .sold-out td {
+            opacity: .75;
+        }
+
+    .badge-stock {
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .in-stock {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .low-stock {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .out-stock {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .action-btn {
+        min-width: 70px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold">Products</h2>
+
+    @if (isAdmin)
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            + Add Product
+        </a>
+    }
+</div>
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Qty</th>
+
+            @* ADMIN ONLY *@
+            @if (isAdmin)
+            {
+                <th>Buying Price</th>
+            }
+
+            <th>Selling Price</th>
+            <th>Date Added</th>
+            <th width="260">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var item in Model)
+        {
+            bool soldOut = item.Quantity <= 0;
+
+            <tr class="@(soldOut ? "sold-out" : "")">
+
+                <td class="fw-semibold">
+                    @item.ProductName
+                </td>
+
+                <td>
+                    @item.Category?.CategoryName
+                </td>
+
+                <td>
+                    @if (item.Quantity <= 0)
+                    {
+                        <span class="badge-stock out-stock">
+                            Sold Out
+                        </span>
+                    }
+                    else if (item.Quantity <= 5)
+                    {
+                        <span class="badge-stock low-stock">
+                            @item.Quantity Left
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge-stock in-stock">
+                            @item.Quantity In Stock
+                        </span>
+                    }
+                </td>
+
+                @* ADMIN ONLY *@
+                @if (isAdmin)
+                {
+                    <td>
+                        UGX @item.BuyingPrice.ToString("N0")
+                    </td>
+                }
+
+                <td>
+                    UGX @item.Price.ToString("N0")
+                </td>
+
+                <td>
+                    @item.DateAdded.ToString("dd MMM yyyy")
+                </td>
+
+                <td>
+                    @* ADMIN *@
+                    @if (isAdmin)
+                    {
+                        <a asp-action="Edit"
+                           asp-route-id="@item.Id"
+                           class="btn btn-sm btn-warning action-btn">
+                            Edit
+                        </a>
+
+                        <a asp-action="Delete"
+                           asp-route-id="@item.Id"
+                           class="btn btn-sm btn-danger action-btn"
+                           onclick="return confirm('Delete this product?')">
+                            Delete
+                        </a>
+                    }
+
+                    @* SELL BUTTON FOR BOTH *@
+                    @if (!soldOut)
+                    {
+                        <a asp-controller="Sales"
+                           asp-action="Sell"
+                           asp-route-productId="@item.Id"
+                           class="btn btn-sm btn-success action-btn">
+                            Sell
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-sm btn-secondary action-btn" disabled>
+                            Sold Out
+                        </button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

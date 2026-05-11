@@ -1,0 +1,103 @@
+﻿@model UrbanGadgets.Models.Sale
+@using UrbanGadgets.Data
+@inject AppDbContext _context
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var product = ViewBag.Product as UrbanGadgets.Models.Product;
+    var settings = _context.AppSettings.FirstOrDefault();
+}
+
+<h2 class="mb-4">Sell Product</h2>
+
+<form asp-action="Sell"
+      method="post"
+      onsubmit="return confirmSale()">
+
+    <input type="hidden" asp-for="ProductId" />
+
+    <div class="mb-3">
+        <label>Product</label>
+        <input class="form-control"
+               value="@product.ProductName"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label>Price</label>
+        <input class="form-control"
+               id="price"
+               value="@product.Price"
+               readonly />
+    </div>
+
+    <div class="mb-3">
+        <label>Quantity</label>
+        <input asp-for="Quantity"
+               class="form-control"
+               id="qty"
+               value="1" />
+    </div>
+
+    @if (settings?.AllowDiscounts == true)
+    {
+        <div class="mb-3">
+            <label>Discount</label>
+            <input asp-for="Discount"
+                   id="discount"
+                   class="form-control"
+                   value="0"
+                   min="0" />
+        </div>
+    }
+
+    <div class="mb-3">
+        <label>Total</label>
+        <input class="form-control"
+               id="total"
+               readonly />
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Confirm Sale
+    </button>
+
+</form>
+
+<script>
+    const price = Number(@product.Price);
+    const qty = document.getElementById("qty");
+    const total = document.getElementById("total");
+    const discount = document.getElementById("discount");
+
+    function calc() {
+        let quantity = Number(qty.value || 0);
+        let subtotal = price * quantity;
+        let disc = discount ? Number(discount.value || 0) : 0;
+
+        let finalTotal = subtotal - disc;
+
+        if (finalTotal < 0)
+            finalTotal = 0;
+
+        total.value = finalTotal.toLocaleString();
+    }
+
+    qty.addEventListener("input", calc);
+
+    if (discount) {
+        discount.addEventListener("input", calc);
+    }
+
+    calc();
+
+    function confirmSale() {
+        var enabled = '@(settings?.ConfirmBeforeSale == true ? "true" : "false")';
+
+        if (enabled === "true") {
+            return confirm("Complete this sale?");
+        }
+
+        return true;
+    }
+</script>

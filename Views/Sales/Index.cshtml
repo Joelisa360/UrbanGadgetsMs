@@ -1,0 +1,86 @@
+﻿@model List<UrbanGadgets.Models.Sale>
+
+@{
+    ViewData["Title"] = "Sales";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-3">Sales History</h2>
+
+<!-- EXPORT BUTTONS -->
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a asp-action="ExportExcel" class="btn btn-success">
+        Export Excel
+    </a>
+
+    <a asp-action="ExportPdf" class="btn btn-danger">
+        Export PDF
+    </a>
+</div>
+
+<!-- FILTERS (BACK TO SIMPLE FORM) -->
+<form method="get" class="row mb-3">
+
+    <div class="col">
+        <input name="search"
+               class="form-control"
+               placeholder="Product"
+               value="@Context.Request.Query["search"]" />
+    </div>
+
+    <div class="col">
+        <input type="date"
+               name="date"
+               class="form-control"
+               value="@Context.Request.Query["date"]" />
+    </div>
+
+    <div class="col">
+        <input name="receipt"
+               class="form-control"
+               placeholder="Receipt No"
+               value="@Context.Request.Query["receipt"]" />
+    </div>
+
+    <div class="col">
+        <input name="cashier"
+               class="form-control"
+               placeholder="Cashier"
+               value="@Context.Request.Query["cashier"]" />
+    </div>
+
+    <div class="col">
+        <button type="submit" class="btn btn-primary w-100">
+            Filter
+        </button>
+    </div>
+
+</form>
+
+<!-- TABLE -->
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Date</th>
+            <th>Receipt</th>
+            <th>Cashier</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.Product?.ProductName</td>
+                <td>@s.Quantity</td>
+                <td>UGX @s.TotalAmount.ToString("N0")</td>
+                <td>@s.SaleDate.ToString("dd MMM yyyy HH:mm")</td>
+                <td>@(s.ReceiptNumber ?? "N/A")</td>
+                <td>@(s.CashierName ?? "System")</td>
+            </tr>
+        }
+    </tbody>
+</table>

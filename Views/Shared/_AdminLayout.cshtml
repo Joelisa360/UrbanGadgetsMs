@@ -1,0 +1,354 @@
+﻿@using UrbanGadgets.Data
+@inject AppDbContext _context
+
+@{
+    var settings = _context.AppSettings.FirstOrDefault();
+}
+
+<!DOCTYPE html>
+<html data-theme="@settings?.ThemeColor">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UrbanGadgets</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --main: #2563eb;
+            --sidebar: #0f172a;
+            --sidebar-hover: #1e293b;
+            --text-light: #cbd5e1;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        [data-theme="Blue"] {
+            --main: #2563eb;
+        }
+
+        [data-theme="Green"] {
+            --main: #10b981;
+        }
+
+        [data-theme="Purple"] {
+            --main: #8b5cf6;
+        }
+
+        [data-theme="Red"] {
+            --main: #ef4444;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+            font-family: Segoe UI, sans-serif;
+            background: var(--bg);
+            transition: .3s;
+        }
+
+            body.dark-mode {
+                --bg: #0f172a;
+                --card: #1e293b;
+                color: white;
+            }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            overflow-y: auto;
+            background: var(--sidebar);
+            color: white;
+            padding: 20px;
+        }
+
+            .sidebar h4 {
+                color: var(--main);
+                margin-bottom: 30px;
+                font-weight: 700;
+            }
+
+            .sidebar a {
+                display: block;
+                color: var(--text-light);
+                text-decoration: none;
+                padding: 12px 14px;
+                border-radius: 10px;
+                margin-bottom: 8px;
+                transition: .2s;
+            }
+
+                .sidebar a:hover {
+                    background: var(--sidebar-hover);
+                    color: white;
+                }
+
+        .main {
+            margin-left: 260px;
+            padding: 30px;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+
+        .card,
+        .card-box,
+        .modal-content,
+        .table,
+        .settings-card,
+        .settings-header {
+            background: var(--card) !important;
+            transition: .3s;
+        }
+
+        body.dark-mode .table {
+            color: white;
+        }
+
+            body.dark-mode .table th,
+            body.dark-mode .table td {
+                color: white;
+                border-color: #334155;
+            }
+
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background: #334155 !important;
+            color: white !important;
+            border-color: #475569 !important;
+        }
+
+        body.dark-mode .text-muted {
+            color: #cbd5e1 !important;
+        }
+
+        body.compact-mode table td,
+        body.compact-mode table th {
+            padding: .4rem !important;
+            font-size: 14px;
+        }
+
+        .btn-primary,
+        .bg-primary {
+            background: var(--main) !important;
+            border-color: var(--main) !important;
+        }
+
+        .text-primary {
+            color: var(--main) !important;
+        }
+
+        .toast-glass {
+            padding: 16px 20px;
+            border-radius: 14px;
+            font-weight: 600;
+            box-shadow: 0 8px 30px rgba(0,0,0,.12);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,.25);
+            transition: .3s;
+        }
+
+        .toast-success {
+            background: rgba(16,185,129,.14);
+            color: #065f46;
+            border-left: 4px solid rgba(16,185,129,.55);
+        }
+
+        .toast-danger {
+            background: rgba(239,68,68,.14);
+            color: #991b1b;
+            border-left: 4px solid rgba(239,68,68,.55);
+        }
+
+        .toast-warning {
+            background: rgba(245,158,11,.14);
+            color: #92400e;
+            border-left: 4px solid rgba(245,158,11,.55);
+        }
+
+        .toast-info {
+            background: rgba(59,130,246,.14);
+            color: #1e3a8a;
+            border-left: 4px solid rgba(59,130,246,.55);
+        }
+    </style>
+</head>
+
+<body class="@(settings?.DarkMode == true ? "dark-mode" : "") @(settings?.CompactTables == true ? "compact-mode" : "")">
+
+    <div class="sidebar">
+        <h4><i class="fa-solid fa-store"></i> UrbanGadgets</h4>
+
+        <a asp-controller="Dashboard" asp-action="Index">
+            <i class="fa-solid fa-house me-2"></i> Dashboard
+        </a>
+
+        <a asp-controller="Categories" asp-action="Index">
+            <i class="fa-solid fa-layer-group me-2"></i> Categories
+        </a>
+
+        <a asp-controller="Products" asp-action="Index">
+            <i class="fa-solid fa-box me-2"></i> Products
+        </a>
+
+        <a asp-controller="Sales" asp-action="Index">
+            <i class="fa-solid fa-cart-shopping me-2"></i> Sales
+        </a>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="Users" asp-action="Cashiers">
+                <i class="fa-solid fa-users me-2"></i> Cashiers
+            </a>
+
+            <a asp-controller="Sales" asp-action="Leaderboard">
+                <i class="fa-solid fa-trophy me-2"></i> Leaderboard
+            </a>
+
+            <a asp-controller="Expenses" asp-action="Index">
+                <i class="fa-solid fa-wallet me-2"></i> Expenses
+            </a>
+
+            <a asp-controller="Report" asp-action="Index">
+                <i class="fa-solid fa-chart-column me-2"></i> Reports
+            </a>
+
+            <a asp-controller="Settings" asp-action="Index">
+                <i class="fa-solid fa-gear me-2"></i> Settings
+            </a>
+        }
+
+        <hr class="text-secondary" />
+
+        <a asp-controller="Account" asp-action="ChangePassword">
+            <i class="fa-solid fa-key me-2"></i> Change Password
+        </a>
+
+        <a asp-controller="Account" asp-action="Logout">
+            <i class="fa-solid fa-right-from-bracket me-2"></i> Logout
+        </a>
+    </div>
+
+    <div class="main">
+        @RenderBody()
+    </div>
+
+    <div id="toast"
+         class="position-fixed top-0 end-0 p-3"
+         style="z-index:9999; display:none; min-width:340px;">
+        <div id="toastBody" class="toast-glass"></div>
+    </div>
+
+    <script>
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("toast");
+            const body = document.getElementById("toastBody");
+
+            body.innerText = message;
+            body.className = "toast-glass";
+
+            if (type === "success") body.classList.add("toast-success");
+            else if (type === "danger") body.classList.add("toast-danger");
+            else if (type === "warning") body.classList.add("toast-warning");
+            else body.classList.add("toast-info");
+
+            toast.style.display = "block";
+
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 2500);
+        }
+    </script>
+
+    @if (TempData["Message"] != null && settings?.PopupNotifications == true)
+    {
+        <script>
+            showToast("@TempData["Message"]", "@TempData["MessageType"]");
+        </script>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Receipt Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sale Completed</h5>
+                </div>
+
+                <div class="modal-body text-center">
+                    <h4 class="text-success mb-3">✓ Success</h4>
+                    <p>Do you want to print a receipt?</p>
+                </div>
+
+                <div class="modal-footer justify-content-center">
+                    <a id="printReceiptBtn" class="btn btn-primary px-4">
+                        Print Receipt
+                    </a>
+
+                    <button type="button"
+                            class="btn btn-light px-4"
+                            data-bs-dismiss="modal">
+                        No Thanks
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["ShowReceiptModal"] != null)
+    {
+        @if (settings?.AutoPrintReceipt == true)
+        {
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    window.location.href = "/Sales/Receipt/@TempData["SaleId"]";
+                });
+            </script>
+        }
+        else
+        {
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    document.getElementById("printReceiptBtn").href =
+                        "/Sales/Receipt/@TempData["SaleId"]";
+
+                    let modal = new bootstrap.Modal(
+                        document.getElementById("receiptModal")
+                    );
+
+                    modal.show();
+                });
+            </script>
+        }
+    }
+
+    @if (settings?.LowStockAlerts == true)
+    {
+        <script>
+            checkLowStock();
+        </script>
+    }
+
+    @if (settings?.PopupNotifications == true &&
+        TempData["Message"] != null)
+    {
+        <script>
+            showToast("@TempData["Message"]",
+                      "@TempData["MessageType"]");
+        </script>
+    }
+
+</body>
+</html>

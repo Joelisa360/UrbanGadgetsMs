@@ -1,0 +1,38 @@
+﻿@model UrbanGadgets.Models.User
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-4">Add Cashier</h2>
+
+<form asp-action="Create" method="post">
+
+    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input asp-for="FullName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input asp-for="Username" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input asp-for="PasswordHash"
+               type="password"
+               class="form-control" />
+    </div>
+
+    <button class="btn btn-primary">
+        Save Cashier
+    </button>
+
+    <a asp-action="Cashiers" class="btn btn-secondary">
+        Cancel
+    </a>
+
+</form>

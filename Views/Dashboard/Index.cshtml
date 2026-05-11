@@ -1,0 +1,256 @@
+﻿@using UrbanGadgets.Data
+@inject AppDbContext _context
+
+@{
+    var settings = _context.AppSettings.FirstOrDefault();
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+    .dash-title {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .stat-card {
+        border: none;
+        border-radius: 18px;
+        padding: 22px;
+        color: white;
+        box-shadow: 0 8px 25px rgba(0,0,0,.08);
+        transition: .2s ease;
+        height: 100%;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+    .blue {
+        background: linear-gradient(135deg,#2563eb,#1e40af);
+    }
+
+    .green {
+        background: linear-gradient(135deg,#10b981,#047857);
+    }
+
+    .purple {
+        background: linear-gradient(135deg,#8b5cf6,#5b21b6);
+    }
+
+    .orange {
+        background: linear-gradient(135deg,#f59e0b,#b45309);
+    }
+
+    .danger {
+        background: linear-gradient(135deg,#ef4444,#991b1b);
+    }
+
+    .stat-label {
+        font-size: 14px;
+        opacity: .9;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
+
+    .section-card {
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.06);
+        padding: 20px;
+        background: white;
+        height: 100%;
+    }
+
+    .pie-wrapper {
+        width: 280px;
+        height: 280px;
+        margin: auto;
+    }
+</style>
+
+<div class="bg-white rounded-4 shadow-sm px-4 py-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold mb-1 text-dark">
+                Welcome, @(User?.Identity?.Name ?? "Admin")
+            </h2>
+            <p class="text-muted mb-0 fs-5">
+                @DateTime.Now.ToString("dddd, MMMM d, yyyy")
+            </p>
+        </div>
+
+        <a asp-controller="Account"
+           asp-action="Logout"
+           class="btn btn-danger rounded-pill px-4 py-2">
+            Logout
+        </a>
+    </div>
+</div>
+
+<!-- STATS -->
+<div class="row g-4 mb-4">
+
+    <div class="col-md-3">
+        <div class="stat-card blue">
+            <div class="stat-label">Today's Sales</div>
+            <div class="stat-value" id="dailySales"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card green">
+            <div class="stat-label">Weekly Sales</div>
+            <div class="stat-value" id="weeklySales"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card purple">
+            <div class="stat-label">Monthly Sales</div>
+            <div class="stat-value" id="monthlySales"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card orange">
+            <div class="stat-label">Net Profit</div>
+            <div class="stat-value" id="profit"></div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card danger">
+            <div class="stat-label">Monthly Expenses</div>
+            <div class="stat-value" id="monthlyExpenses"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- CHARTS -->
+<div class="section-card mb-4">
+    <h5>Sales Trend</h5>
+    <canvas id="salesChart" height="90"></canvas>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <div class="section-card">
+            <h5>Top Products</h5>
+            <canvas id="topProductsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="section-card text-center">
+            <h5>Expense Breakdown</h5>
+            <div class="pie-wrapper">
+                <canvas id="expensePieChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ALERTS -->
+<div id="lowStockAlert" class="alert alert-warning mt-4 d-none"></div>
+<div id="expenseAlert" class="alert alert-danger mt-3 d-none"></div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        loadDashboard();
+        loadSalesChart();
+        loadTopProducts();
+
+        var lowStock = @(settings?.LowStockAlerts == true ? "true" : "false");
+        var expenseAlert = @(settings?.ExpenseAlerts == true ? "true" : "false");
+
+        if (lowStock === "true") checkLowStock();
+        if (expenseAlert === "true") checkExpenseAlert();
+    });
+
+    async function loadDashboard() {
+        const res = await fetch('/Home/GetDashboardData');
+        const data = await res.json();
+
+        document.getElementById("dailySales").innerText = "UGX " + (data.daily ?? 0).toLocaleString();
+        document.getElementById("weeklySales").innerText = "UGX " + (data.weekly ?? 0).toLocaleString();
+        document.getElementById("monthlySales").innerText = "UGX " + (data.monthly ?? 0).toLocaleString();
+        document.getElementById("monthlyExpenses").innerText = "UGX " + (data.expenses ?? 0).toLocaleString();
+        document.getElementById("profit").innerText = "UGX " + (data.profit ?? 0).toLocaleString();
+
+        if (data.byCategory?.length) {
+            new Chart(document.getElementById("expensePieChart"), {
+                type: "pie",
+                data: {
+                    labels: data.byCategory.map(x => x.category),
+                    datasets: [{
+                        data: data.byCategory.map(x => x.total)
+                    }]
+                }
+            });
+        }
+    }
+
+    async function loadSalesChart() {
+        const res = await fetch('/Home/GetSalesChart');
+        const data = await res.json();
+
+        new Chart(document.getElementById("salesChart"), {
+            type: "line",
+            data: {
+                labels: data.map(x => x.date),
+                datasets: [{
+                    label: "Sales",
+                    data: data.map(x => x.total)
+                }]
+            }
+        });
+    }
+
+    async function loadTopProducts() {
+        const res = await fetch('/Home/GetTopProducts');
+        const data = await res.json();
+
+        new Chart(document.getElementById("topProductsChart"), {
+            type: "bar",
+            data: {
+                labels: data.map(x => x.product),
+                datasets: [{
+                    label: "Top Products",
+                    data: data.map(x => x.total)
+                }]
+            }
+        });
+    }
+
+    async function checkLowStock() {
+        const res = await fetch('/Home/GetLowStock');
+        const data = await res.json();
+
+        if (data.length > 0) {
+            document.getElementById("lowStockAlert").classList.remove("d-none");
+            document.getElementById("lowStockAlert").innerHTML =
+                data.map(p => `${p.name} (Stock: ${p.qty})`).join("<br>");
+        }
+    }
+
+    async function checkExpenseAlert() {
+        const res = await fetch('/Home/GetExpenseAlert');
+        const data = await res.json();
+
+        if (data.exceeded) {
+            const box = document.getElementById("expenseAlert");
+            box.classList.remove("d-none");
+            box.innerHTML =
+                "Warning: Expenses exceeded UGX " + data.total.toLocaleString();
+        }
+    }
+</script>

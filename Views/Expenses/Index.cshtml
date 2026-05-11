@@ -1,0 +1,44 @@
+﻿@model List<UrbanGadgets.Models.Expense>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Expenses</h2>
+
+    <a asp-action="Create" class="btn btn-danger">
+        + Add Expense
+    </a>
+</div>
+
+<table class="table table-bordered table-hover bg-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Date</th>
+            <th width="120">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var e in Model)
+        {
+            <tr>
+                <td>@e.ExpenseName</td>
+                <td>@e.Category</td>
+                <td>UGX @e.Amount.ToString("N0")</td>
+                <td>@e.ExpenseDate.ToString("dd MMM yyyy")</td>
+                <td>
+                    <a asp-action="Delete"
+                       asp-route-id="@e.Id"
+                       class="btn btn-sm btn-danger">
+                        Delete
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

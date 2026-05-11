@@ -1,0 +1,34 @@
+﻿@model UrbanGadgets.Models.RestockReport
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>@Model.ReportNumber</h2>
+<p>@Model.ReportDate.ToString("dddd, dd MMM yyyy")</p>
+<p>Created By: @Model.CreatedBy</p>
+
+<table class="table table-bordered">
+    <thead class="table-dark">
+        <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Buying</th>
+            <th>Selling</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.ProductName</td>
+                <td>@item.CategoryName</td>
+                <td>@item.Quantity</td>
+                <td>UGX @item.BuyingPrice.ToString("N0")</td>
+                <td>UGX @item.Price.ToString("N0")</td>
+                <td>UGX @item.Total.ToString("N0")</td>
+            </tr>
+        }
+    </tbody>
+</table>

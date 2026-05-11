@@ -1,0 +1,61 @@
+﻿@model List<UrbanGadgets.Models.User>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between mb-3">
+    <h2>Cashiers</h2>
+
+    <a asp-action="Create" class="btn btn-primary">
+        + Add Cashier
+    </a>
+</div>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th width="180">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.FullName</td>
+                <td>@u.Username</td>
+                <td>
+                    @if (u.IsActive)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Inactive</span>
+                    }
+                </td>
+                <td>@u.CreatedAt.ToString("dd MMM yyyy")</td>
+                <td>
+                    <a asp-action="Toggle"
+                       asp-route-id="@u.Id"
+                       class="btn btn-sm btn-warning">
+                        Toggle
+                    </a>
+
+                    <a asp-action="ResetPassword"
+                       asp-route-id="@u.Id"
+                       class="btn btn-sm btn-info text-white"
+                       onclick="return confirm('Reset this cashier password?')">
+                        Reset
+                    </a>
+                </td>
+
+            </tr>
+        }
+    </tbody>
+</table>
