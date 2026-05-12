@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using UrbanGadgets.Data;
 using UrbanGadgets.Models;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+//using iTextSharp.text;
+//using iTextSharp.text.pdf;
 using ClosedXML.Excel;
 
 namespace UrbanGadgetsMS.Controllers
@@ -243,51 +243,51 @@ namespace UrbanGadgetsMS.Controllers
             );
         }
 
-        public IActionResult ExportPdf()
-        {
-            var sales = _context.Sales
-                .Include(s => s.Product)
-                .ToList();
+        //public IActionResult ExportPdf()
+        //{
+        //    var sales = _context.Sales
+        //        .Include(s => s.Product)
+        //        .ToList();
 
-            using var stream = new MemoryStream();
-            var doc = new Document(PageSize.A4.Rotate());
+        //    using var stream = new MemoryStream();
+        //    var doc = new Document(PageSize.A4.Rotate());
 
-            PdfWriter.GetInstance(doc, stream);
-            doc.Open();
+        //    PdfWriter.GetInstance(doc, stream);
+        //    doc.Open();
 
-            // Title
-            doc.Add(new Paragraph("URBAN GADGETS SALES REPORT"));
-            doc.Add(new Paragraph(" "));
+        //    // Title
+        //    doc.Add(new Paragraph("URBAN GADGETS SALES REPORT"));
+        //    doc.Add(new Paragraph(" "));
 
-            // Table
-            PdfPTable table = new PdfPTable(6);
-            table.WidthPercentage = 100;
+        //    // Table
+        //    PdfPTable table = new PdfPTable(6);
+        //    table.WidthPercentage = 100;
 
-            // Headers
-            string[] headers = { "Product", "Qty", "Total", "Date", "Receipt", "Cashier" };
+        //    // Headers
+        //    string[] headers = { "Product", "Qty", "Total", "Date", "Receipt", "Cashier" };
 
-            foreach (var h in headers)
-            {
-                var cell = new PdfPCell(new Phrase(h));
-                cell.BackgroundColor = BaseColor.LIGHT_GRAY;
-                table.AddCell(cell);
-            }
+        //    foreach (var h in headers)
+        //    {
+        //        var cell = new PdfPCell(new Phrase(h));
+        //        cell.BackgroundColor = BaseColor.LIGHT_GRAY;
+        //        table.AddCell(cell);
+        //    }
 
-            // Rows
-            foreach (var s in sales)
-            {
-                table.AddCell(s.Product?.ProductName);
-                table.AddCell(s.Quantity.ToString());
-                table.AddCell("UGX " + s.TotalAmount.ToString("N0"));
-                table.AddCell(s.SaleDate.ToString("dd/MM/yyyy"));
-                table.AddCell(s.ReceiptNumber);
-                table.AddCell(s.CashierName);
-            }
+        //    // Rows
+        //    foreach (var s in sales)
+        //    {
+        //        table.AddCell(s.Product?.ProductName);
+        //        table.AddCell(s.Quantity.ToString());
+        //        table.AddCell("UGX " + s.TotalAmount.ToString("N0"));
+        //        table.AddCell(s.SaleDate.ToString("dd/MM/yyyy"));
+        //        table.AddCell(s.ReceiptNumber);
+        //        table.AddCell(s.CashierName);
+        //    }
 
-            doc.Add(table);
-            doc.Close();
+        //    doc.Add(table);
+        //    doc.Close();
 
-            return File(stream.ToArray(), "application/pdf", "Sales.pdf");
-        }
+        //    return File(stream.ToArray(), "application/pdf", "Sales.pdf");
+        //}
     }
 }

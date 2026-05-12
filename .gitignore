@@ -1,5 +1,7 @@
-.vs/
 bin/
 obj/
+.vs/
+.git/
+Dockerfile*
 *.user
 *.suo
