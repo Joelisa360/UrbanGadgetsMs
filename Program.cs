@@ -5,6 +5,9 @@ using UrbanGadgets.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -26,7 +29,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddDistributedMemoryCache();
 
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+
 
 builder.WebHost.UseUrls($"http://*:{port}");
 
@@ -55,6 +58,8 @@ using (var scope = tempProvider.CreateScope())
 }
 
 builder.Services.AddAuthorization();
+
+
 
 var app = builder.Build();
 
