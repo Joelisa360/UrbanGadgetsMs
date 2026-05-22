@@ -33,4 +33,12 @@
 		<Folder Include="Views\Reports\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <EditorConfigFiles Remove="D:\Projects\UrbanGadgetsMS\UrbanGadgetsMS\.editorconfig" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="D:\Projects\UrbanGadgetsMS\UrbanGadgetsMS\.editorconfig" />
+	</ItemGroup>
+
 </Project>
