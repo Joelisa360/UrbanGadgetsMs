@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using UrbanGadgets.Data;
+using UrbanGadgets.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+AppContext.SetSwitch("System.Net.Dns.UseIpv6", false);
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 builder.WebHost.UseUrls($"http://*:{port}");
@@ -22,11 +25,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 
-//builder.Services.AddDbContext<AppDbContext>(options =>
-//    options.UseSqlServer(
-//        builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=urbangadgets.db"));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 builder.Services.AddDistributedMemoryCache();
 
@@ -36,34 +38,64 @@ builder.Services.AddDistributedMemoryCache();
 builder.WebHost.UseUrls($"http://*:{port}");
 
 // ================= SETTINGS FROM DATABASE =================
-var tempProvider = builder.Services.BuildServiceProvider();
+//var tempProvider = builder.Services.BuildServiceProvider();
 
-using (var scope = tempProvider.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+//using (var scope = tempProvider.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-    var settings = db.AppSettings.FirstOrDefault();
+//    var settings = db.AppSettings.FirstOrDefault();
 
-    int mins = 15;
+//    int mins = 15;
 
-    if (settings?.AutoLogout == "5 Minutes") mins = 5;
-    if (settings?.AutoLogout == "15 Minutes") mins = 15;
-    if (settings?.AutoLogout == "30 Minutes") mins = 30;
-    if (settings?.AutoLogout == "Never") mins = 1440;
+//    if (settings?.AutoLogout == "5 Minutes") mins = 5;
+//    if (settings?.AutoLogout == "15 Minutes") mins = 15;
+//    if (settings?.AutoLogout == "30 Minutes") mins = 30;
+//    if (settings?.AutoLogout == "Never") mins = 1440;
 
-    builder.Services.AddSession(options =>
+//    builder.Services.AddSession(options =>
+//{
+//    options.IdleTimeout = TimeSpan.FromMinutes(15);
+//    options.Cookie.HttpOnly = true;
+//    options.Cookie.IsEssential = true;
+//});
+//}
+builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(15);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
-}
 
 builder.Services.AddAuthorization();
 
-
-
 var app = builder.Build();
+
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        if (db.Database.CanConnect())
+        {
+            if (!db.Users.Any())
+            {
+                db.Users.Add(new User
+                {
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
+                });
+
+                db.SaveChanges();
+            }
+        }
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Seeding failed: " + ex.Message);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

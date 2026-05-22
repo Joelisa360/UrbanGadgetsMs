@@ -17,12 +17,12 @@ namespace UrbanGadgetsMS.Controllers
         // LIST
         public IActionResult Index()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var week = today.AddDays(-7);
 
             ViewBag.DailySales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate.Date == today)
+                .Where(x => x.SaleDate >= today && x.SaleDate < today.AddDays(1))
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
 
@@ -57,7 +57,7 @@ namespace UrbanGadgetsMS.Controllers
         public IActionResult SaveRestock(RestockReport report)
         {
             report.CreatedBy = User.Identity?.Name ?? "Admin";
-            report.ReportDate = DateTime.Now;
+            report.ReportDate = DateTime.UtcNow;
 
             decimal total = 0;
 
@@ -93,7 +93,7 @@ namespace UrbanGadgetsMS.Controllers
                         Quantity = item.Quantity,
                         BuyingPrice = item.BuyingPrice > 0 ? item.BuyingPrice : 0,
                         Price = item.Price > 0 ? item.Price : 0,
-                        DateAdded = DateTime.Now
+                        DateAdded = DateTime.UtcNow
                     };
 
                     _context.Products.Add(product);

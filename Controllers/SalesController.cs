@@ -114,13 +114,13 @@ namespace UrbanGadgetsMS.Controllers
             sale.Profit = (subtotal - discount) - cost;
             if (sale.Profit < 0)
                 sale.Profit = 0;
-            sale.SaleDate = DateTime.Now;
+            sale.SaleDate = DateTime.UtcNow;
 
             // Reduce stock
             product.Quantity -= sale.Quantity;
 
             // NEW: receipt number
-            sale.ReceiptNumber = "INV-" + DateTime.Now.Ticks.ToString().Substring(10);
+            sale.ReceiptNumber = "INV-" + DateTime.UtcNow.Ticks.ToString().Substring(10);
 
             // NEW: cashier
             sale.CashierName = User.Identity.Name ?? "Admin";
@@ -243,51 +243,6 @@ namespace UrbanGadgetsMS.Controllers
             );
         }
 
-        //public IActionResult ExportPdf()
-        //{
-        //    var sales = _context.Sales
-        //        .Include(s => s.Product)
-        //        .ToList();
-
-        //    using var stream = new MemoryStream();
-        //    var doc = new Document(PageSize.A4.Rotate());
-
-        //    PdfWriter.GetInstance(doc, stream);
-        //    doc.Open();
-
-        //    // Title
-        //    doc.Add(new Paragraph("URBAN GADGETS SALES REPORT"));
-        //    doc.Add(new Paragraph(" "));
-
-        //    // Table
-        //    PdfPTable table = new PdfPTable(6);
-        //    table.WidthPercentage = 100;
-
-        //    // Headers
-        //    string[] headers = { "Product", "Qty", "Total", "Date", "Receipt", "Cashier" };
-
-        //    foreach (var h in headers)
-        //    {
-        //        var cell = new PdfPCell(new Phrase(h));
-        //        cell.BackgroundColor = BaseColor.LIGHT_GRAY;
-        //        table.AddCell(cell);
-        //    }
-
-        //    // Rows
-        //    foreach (var s in sales)
-        //    {
-        //        table.AddCell(s.Product?.ProductName);
-        //        table.AddCell(s.Quantity.ToString());
-        //        table.AddCell("UGX " + s.TotalAmount.ToString("N0"));
-        //        table.AddCell(s.SaleDate.ToString("dd/MM/yyyy"));
-        //        table.AddCell(s.ReceiptNumber);
-        //        table.AddCell(s.CashierName);
-        //    }
-
-        //    doc.Add(table);
-        //    doc.Close();
-
-        //    return File(stream.ToArray(), "application/pdf", "Sales.pdf");
-        //}
+        
     }
 }

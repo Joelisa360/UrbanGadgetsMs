@@ -52,7 +52,7 @@ namespace UrbanGadgetsMS.Controllers
         [HttpGet]
         public IActionResult GetDashboardData()
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow.Date;
             var week = today.AddDays(-7);
             var month = today.AddMonths(-1);
 
@@ -103,8 +103,10 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult GetSalesChart()
         {
+            var today = DateTime.UtcNow.Date;
+
             var last7Days = Enumerable.Range(0, 7)
-                .Select(i => DateTime.Today.AddDays(-i))
+                .Select(i => today.AddDays(-i))
                 .OrderBy(d => d)
                 .ToList();
 
@@ -112,7 +114,7 @@ namespace UrbanGadgetsMS.Controllers
             {
                 date = day.ToString("dd MMM"),
                 total = _context.Sales
-                    .Where(s => s.SaleDate.Date == day)
+                    .Where(s => s.SaleDate.Date == day.Date)
                     .Sum(s => (decimal?)s.TotalAmount) ?? 0
             });
 

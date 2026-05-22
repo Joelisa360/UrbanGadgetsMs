@@ -14,7 +14,7 @@ namespace UrbanGadgets.Models
 
        // public string Category { get; set; }   // Rent, Transport, Utilities...
 
-        public DateTime ExpenseDate { get; set; } = DateTime.Now;
+        public DateTime ExpenseDate { get; set; } = DateTime.UtcNow;
 
         public string Notes { get; set; }
 

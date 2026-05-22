@@ -16,7 +16,7 @@ namespace UrbanGadgets.Models
 
         public decimal TotalAmount { get; set; }
 
-        public DateTime SaleDate { get; set; } = DateTime.Now;
+        public DateTime SaleDate { get; set; } = DateTime.UtcNow;
 
         // NEW
         public string? ReceiptNumber { get; set; }

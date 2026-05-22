@@ -10,7 +10,7 @@ namespace UrbanGadgets.Models
         [Required]
         public string ReportNumber { get; set; } = string.Empty;
 
-        public DateTime ReportDate { get; set; } = DateTime.Now;
+        public DateTime ReportDate { get; set; } = DateTime.UtcNow;
 
         public decimal TotalAmount { get; set; }
 

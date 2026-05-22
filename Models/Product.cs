@@ -25,7 +25,7 @@ namespace UrbanGadgets.Models
 
         public int CategoryId { get; set; }
         public Category? Category { get; set; }
-        public DateTime DateAdded { get; set; }
+        public DateTime DateAdded { get; set; } = DateTime.UtcNow;
 
         //Navigation
         public List<RestockItem> RestockItems { get; set; }

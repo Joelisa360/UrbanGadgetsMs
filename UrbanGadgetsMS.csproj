@@ -1,29 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>f82abd27-cdc3-4aec-a87a-95750a3ec782</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>.</DockerfileContext>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>f82abd27-cdc3-4aec-a87a-95750a3ec782</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.23">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+		<PackageReference Include="ClosedXML" Version="0.105.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.4" />
 
-  <ItemGroup>
-    <Folder Include="Views\Reports\" />
-  </ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.4" />
+		<PackageReference Include="System.Net.Http.WinHttpHandler" Version="10.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Views\Reports\" />
+	</ItemGroup>
 
 </Project>

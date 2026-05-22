@@ -2,8 +2,8 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using UrbanGadgets.Data;
 
 #nullable disable
@@ -17,22 +17,79 @@ namespace UrbanGadgetsMS.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.23")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "8.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("UrbanGadgets.Models.AppSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowDiscounts")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("AutoLogout")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("AutoPrintReceipt")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CompactTables")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ConfirmBeforeSale")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("DarkMode")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("ExpenseAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LowStockAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("MonthlyExpenseLimit")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("PinCode")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PinLock")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PopupNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("RequirePinOnLogin")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ThemeColor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppSettings");
+                });
 
             modelBuilder.Entity("UrbanGadgets.Models.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CategoryName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -46,27 +103,27 @@ namespace UrbanGadgetsMS.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Category")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("ExpenseDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("ExpenseName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Notes")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -77,28 +134,31 @@ namespace UrbanGadgetsMS.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BuyingPrice")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("DateAdded")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ReorderLevel")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -107,28 +167,101 @@ namespace UrbanGadgetsMS.Migrations
                     b.ToTable("Products");
                 });
 
+            modelBuilder.Entity("UrbanGadgets.Models.RestockItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BuyingPrice")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RestockReportId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("RestockReportId");
+
+                    b.ToTable("RestockItems");
+                });
+
+            modelBuilder.Entity("UrbanGadgets.Models.RestockReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ReportDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReportNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("RestockReports");
+                });
+
             modelBuilder.Entity("UrbanGadgets.Models.Sale", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CashierName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Profit")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ReceiptNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("SaleDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
@@ -144,27 +277,31 @@ namespace UrbanGadgetsMS.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -182,6 +319,23 @@ namespace UrbanGadgetsMS.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("UrbanGadgets.Models.RestockItem", b =>
+                {
+                    b.HasOne("UrbanGadgets.Models.Product", "Product")
+                        .WithMany("RestockItems")
+                        .HasForeignKey("ProductId");
+
+                    b.HasOne("UrbanGadgets.Models.RestockReport", "RestockReport")
+                        .WithMany("Items")
+                        .HasForeignKey("RestockReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("RestockReport");
+                });
+
             modelBuilder.Entity("UrbanGadgets.Models.Sale", b =>
                 {
                     b.HasOne("UrbanGadgets.Models.Product", "Product")
@@ -191,6 +345,16 @@ namespace UrbanGadgetsMS.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("UrbanGadgets.Models.Product", b =>
+                {
+                    b.Navigation("RestockItems");
+                });
+
+            modelBuilder.Entity("UrbanGadgets.Models.RestockReport", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
