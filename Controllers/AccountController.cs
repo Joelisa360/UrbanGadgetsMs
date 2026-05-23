@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using UrbanGadgets.Data;
 using UrbanGadgets.Models;
@@ -28,7 +29,7 @@ namespace UrbanGadgets.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = _context.Users.FirstOrDefault(x => x.Username == model.Username);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == model.Username);
 
             if (user == null)
             {
