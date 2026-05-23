@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using UrbanGadgets.Data;
 using UrbanGadgets.Models;
-using Microsoft.AspNetCore.HttpOverrides;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +11,8 @@ AppContext.SetSwitch("System.Net.Dns.UseIpv6", false);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
 builder.WebHost.UseUrls($"http://*:{port}");
 
-// Add services to the container.
+// ================= SERVICES =================
+
 builder.Services.AddControllersWithViews();
 
 // Authentication
@@ -21,62 +21,41 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
+
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
     });
 
-
+// PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        npgsqlOptions =>
-        {
-            npgsqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 5,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
-                errorCodesToAdd: null);
-        }));
+        builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Cache
 builder.Services.AddDistributedMemoryCache();
 
-
-
-
-builder.WebHost.UseUrls($"http://*:{port}");
-
-// ================= SETTINGS FROM DATABASE =================
-var tempProvider = builder.Services.BuildServiceProvider();
-
-using (var scope = tempProvider.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-    var settings = db.AppSettings.FirstOrDefault();
-
-    int mins = 15;
-
-    if (settings?.AutoLogout == "5 Minutes") mins = 5;
-    if (settings?.AutoLogout == "15 Minutes") mins = 15;
-    if (settings?.AutoLogout == "30 Minutes") mins = 30;
-    if (settings?.AutoLogout == "Never") mins = 1440;
-
-    builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(15);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
-}
+// Session
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(15);
+
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization();
 
+// ================= BUILD APP =================
+
 var app = builder.Build();
+
+// ================= DATABASE INIT =================
 
 try
 {
@@ -84,8 +63,29 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        // Apply migrations
         db.Database.Migrate();
 
+        // Load settings
+        var settings = db.AppSettings.FirstOrDefault();
+
+        int mins = 15;
+
+        if (settings?.AutoLogout == "5 Minutes")
+            mins = 5;
+
+        else if (settings?.AutoLogout == "15 Minutes")
+            mins = 15;
+
+        else if (settings?.AutoLogout == "30 Minutes")
+            mins = 30;
+
+        else if (settings?.AutoLogout == "Never")
+            mins = 1440;
+
+        Console.WriteLine($"Auto logout setting: {mins} minutes");
+
+        // Seed Admin User
         var user = db.Users.FirstOrDefault(x => x.Username == "admin");
 
         if (user == null)
@@ -112,39 +112,46 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine("Seeding failed: " + ex.Message);
+    Console.WriteLine("Startup error: " + ex.Message);
 }
 
-// Configure the HTTP request pipeline.
+// ================= PIPELINE =================
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
+else
+{
+    app.UseDeveloperExceptionPage();
+}
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                       ForwardedHeaders.XForwardedProto
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto
 });
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
+app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseSession();
 
 app.UseAuthentication();
+
 app.UseAuthorization();
 
-app.UseDeveloperExceptionPage();
+// ================= ROUTES =================
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}");
-app.Run();
 
+// ================= RUN =================
+
+app.Run();

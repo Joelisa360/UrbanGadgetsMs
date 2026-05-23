@@ -15,13 +15,50 @@ namespace UrbanGadgetsMS.Controllers
         }
 
         // LIST
-        public IActionResult Index()
+        public IActionResult Index(string search, int? categoryId, int page = 1)
         {
+            int pageSize = 10;
+
             var products = _context.Products
                 .Include(p => p.Category)
+                .AsQueryable();
+
+            // SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                products = products.Where(p =>
+                    p.ProductName.ToLower().Contains(search.ToLower()));
+            }
+
+            // CATEGORY
+            if (categoryId.HasValue && categoryId > 0)
+            {
+                products = products.Where(p => p.CategoryId == categoryId);
+            }
+
+            // TOTAL ITEMS
+            int totalItems = products.Count();
+
+            // PAGINATION
+            var pagedProducts = products
+                .OrderBy(p => p.ProductName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToList();
 
-            return View(products);
+            // VIEWBAGS
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            ViewBag.TotalItems = totalItems;
+
+            ViewBag.Search = search;
+            ViewBag.CategoryId = categoryId;
+
+            ViewBag.Categories = _context.Categories
+                .OrderBy(c => c.CategoryName)
+                .ToList();
+
+            return View(pagedProducts);
         }
 
         // CREATE - GET
