@@ -61,9 +61,10 @@ namespace UrbanGadgets.Controllers
             }
 
             // NORMAL LOGIN
-            await SignUserIn(user);
+            //await SignUserIn(user);
 
-            return RedirectToAction("Index", "Dashboard");
+            //return RedirectToAction("Index", "Dashboard");
+            return Content("LOGIN SUCCESS");
         }
 
         public async Task<IActionResult> Logout()
