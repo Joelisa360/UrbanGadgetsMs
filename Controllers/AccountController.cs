@@ -23,47 +23,51 @@ namespace UrbanGadgets.Controllers
             return View();
         }
 
+        //[HttpPost]
+        //public async Task<IActionResult> Login(LoginVM model)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return View(model);
+
+        //    var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == model.Username);
+
+        //    if (user == null)
+        //    {
+        //        ViewBag.Error = "Username or password is incorrect";
+        //        return View(model);
+        //    }
+
+        //    bool valid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
+
+        //    if (!valid)
+        //    {
+        //        ViewBag.Error = "Username or password is incorrect";
+        //        return View(model);
+        //    }
+
+        //    if (!user.IsActive)
+        //    {
+        //        ViewBag.Error = "Account is disabled";
+        //        return View(model);
+        //    }
+
+        //    var settings = _context.AppSettings.FirstOrDefault();
+
+        //    // PIN REQUIRED
+        //    if (settings?.PinLock == true && settings.RequirePinOnLogin)
+        //    {
+        //        HttpContext.Session.SetString("PendingUser", user.Username);
+        //        return RedirectToAction("EnterPin");
+        //    }
+
+        //    // NORMAL LOGIN
+        //    await SignUserIn(user);
+
+        //    return RedirectToAction("Index", "Dashboard");
+        //}
         [HttpPost]
-        public async Task<IActionResult> Login(LoginVM model)
+        public IActionResult Login(LoginVM model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == model.Username);
-
-            if (user == null)
-            {
-                ViewBag.Error = "Username or password is incorrect";
-                return View(model);
-            }
-
-            bool valid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
-
-            if (!valid)
-            {
-                ViewBag.Error = "Username or password is incorrect";
-                return View(model);
-            }
-
-            if (!user.IsActive)
-            {
-                ViewBag.Error = "Account is disabled";
-                return View(model);
-            }
-
-            var settings = _context.AppSettings.FirstOrDefault();
-
-            // PIN REQUIRED
-            if (settings?.PinLock == true && settings.RequirePinOnLogin)
-            {
-                HttpContext.Session.SetString("PendingUser", user.Username);
-                return RedirectToAction("EnterPin");
-            }
-
-            // NORMAL LOGIN
-            //await SignUserIn(user);
-
-            //return RedirectToAction("Index", "Dashboard");
             return Content("LOGIN SUCCESS");
         }
 
