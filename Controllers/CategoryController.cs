@@ -19,16 +19,19 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult Index(string search, string sortOrder, int page = 1)
         {
-            int pageSize = 5;
+            int pageSize = 10;
 
-            ViewData["SortParam"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["SortParam"] =
+                string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
 
             var categories = _context.Categories.AsQueryable();
 
             // SEARCH
-            if (!string.IsNullOrEmpty(search))
+            if (!string.IsNullOrWhiteSpace(search))
             {
-                categories = categories.Where(c => c.CategoryName.Contains(search));
+                categories = categories.Where(c =>
+                    c.CategoryName.ToLower()
+                    .Contains(search.ToLower()));
             }
 
             // SORT
@@ -36,16 +39,21 @@ namespace UrbanGadgetsMS.Controllers
                 ? categories.OrderByDescending(c => c.CategoryName)
                 : categories.OrderBy(c => c.CategoryName);
 
-            // PAGINATION
-            var totalItems = categories.Count();
+            // TOTAL ITEMS
+            int totalItems = categories.Count();
 
+            // PAGINATION
             var data = categories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToList();
 
-            ViewBag.Page = page;
-            ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages =
+                (int)Math.Ceiling((double)totalItems / pageSize);
+
+            ViewBag.TotalItems = totalItems;
+            ViewBag.Search = search;
 
             return View(data);
         }

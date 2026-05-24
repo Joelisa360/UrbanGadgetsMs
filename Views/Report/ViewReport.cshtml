@@ -1,34 +1,105 @@
 ﻿@model UrbanGadgets.Models.RestockReport
+
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>@Model.ReportNumber</h2>
-<p>@Model.ReportDate.ToString("dddd, dd MMM yyyy")</p>
-<p>Created By: @Model.CreatedBy</p>
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-<table class="table table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Product</th>
-            <th>Category</th>
-            <th>Qty</th>
-            <th>Buying</th>
-            <th>Selling</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Items)
-        {
-            <tr>
-                <td>@item.ProductName</td>
-                <td>@item.CategoryName</td>
-                <td>@item.Quantity</td>
-                <td>UGX @item.BuyingPrice.ToString("N0")</td>
-                <td>UGX @item.Price.ToString("N0")</td>
-                <td>UGX @item.Total.ToString("N0")</td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <div>
+        <h2 class="fw-bold mb-1">
+            @Model.ReportNumber
+        </h2>
+
+        <div class="text-muted">
+            @Model.ReportDate.ToString("dddd, dd MMM yyyy")
+        </div>
+    </div>
+
+    <a href="javascript:history.back()"
+       class="btn btn-secondary">
+        ← Back
+    </a>
+
+</div>
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+
+    <div class="card-body">
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <strong>Created By:</strong>
+                @Model.CreatedBy
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <strong>Total Amount:</strong>
+                UGX @Model.TotalAmount.ToString("N0")
+            </div>
+
+        </div>
+
+        <table class="table table-bordered table-hover align-middle">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Qty</th>
+                    <th>Buying</th>
+                    <th>Selling</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @{
+                    int no = 1;
+                }
+
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+
+                        <td>@no</td>
+
+                        <td class="fw-semibold">
+                            @item.ProductName
+                        </td>
+
+                        <td>
+                            @item.CategoryName
+                        </td>
+
+                        <td>
+                            @item.Quantity
+                        </td>
+
+                        <td>
+                            UGX @item.BuyingPrice.ToString("N0")
+                        </td>
+
+                        <td>
+                            UGX @item.Price.ToString("N0")
+                        </td>
+
+                        <td class="fw-semibold">
+                            UGX @item.Total.ToString("N0")
+                        </td>
+
+                    </tr>
+
+                    no++;
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
