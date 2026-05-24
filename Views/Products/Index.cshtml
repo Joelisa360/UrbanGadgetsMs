@@ -268,16 +268,19 @@
 
 @if (ViewBag.TotalPages > 1)
 {
+    int current = ViewBag.CurrentPage;
+    int total = ViewBag.TotalPages;
+
     <nav class="mt-3">
-        <ul class="pagination justify-content-center">
+        <ul class="pagination justify-content-center flex-wrap">
 
             <!-- PREVIOUS -->
-            @if (ViewBag.CurrentPage > 1)
+            @if (current > 1)
             {
                 <li class="page-item">
                     <a class="page-link"
                        asp-action="Index"
-                       asp-route-page="@(ViewBag.CurrentPage - 1)"
+                       asp-route-page="@(current - 1)"
                        asp-route-search="@ViewBag.Search"
                        asp-route-categoryId="@ViewBag.CategoryId">
                         Previous
@@ -285,10 +288,56 @@
                 </li>
             }
 
-            <!-- PAGE NUMBERS -->
-            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+            <!-- FIRST PAGES -->
+            @for (int i = 1; i <= Math.Min(3, total); i++)
             {
-                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                <li class="page-item @(i == current ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-categoryId="@ViewBag.CategoryId">
+                        @i
+                    </a>
+                </li>
+            }
+
+            <!-- DOTS -->
+            @if (current > 5)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            <!-- CURRENT AREA -->
+            @for (int i = Math.Max(4, current - 1);
+                    i <= Math.Min(total - 3, current + 1);
+                    i++)
+            {
+                <li class="page-item @(i == current ? "active" : "")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@i"
+                       asp-route-search="@ViewBag.Search"
+                       asp-route-categoryId="@ViewBag.CategoryId">
+                        @i
+                    </a>
+                </li>
+            }
+
+            <!-- DOTS -->
+            @if (current < total - 4)
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            }
+
+            <!-- LAST PAGES -->
+            @for (int i = Math.Max(total - 2, 4); i <= total; i++)
+            {
+                <li class="page-item @(i == current ? "active" : "")">
                     <a class="page-link"
                        asp-action="Index"
                        asp-route-page="@i"
@@ -300,12 +349,12 @@
             }
 
             <!-- NEXT -->
-            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            @if (current < total)
             {
                 <li class="page-item">
                     <a class="page-link"
                        asp-action="Index"
-                       asp-route-page="@(ViewBag.CurrentPage + 1)"
+                       asp-route-page="@(current + 1)"
                        asp-route-search="@ViewBag.Search"
                        asp-route-categoryId="@ViewBag.CategoryId">
                         Next
