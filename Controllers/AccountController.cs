@@ -6,7 +6,7 @@ using UrbanGadgets.Data;
 using UrbanGadgets.Models;
 using UrbanGadgets.ViewModels;
 
-namespace UrbanGadgets.Controllers
+namespace UrbanGadgetsMS.Controllers
 {
     public class AccountController : Controller
     {

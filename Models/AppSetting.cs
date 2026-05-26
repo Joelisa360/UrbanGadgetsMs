@@ -1,4 +1,6 @@
-﻿namespace UrbanGadgets.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace UrbanGadgets.Models
 {
     public class AppSetting
     {
@@ -26,5 +28,6 @@
         public bool AllowDiscounts { get; set; }
 
         public decimal MonthlyExpenseLimit { get; set; }
+        public decimal MonthlySalesTarget { get; set; }
     }
 }

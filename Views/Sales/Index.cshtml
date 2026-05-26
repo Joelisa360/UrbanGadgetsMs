@@ -5,82 +5,286 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2 class="mb-3">Sales History</h2>
+<style>
 
-<!-- EXPORT BUTTONS -->
-<div class="d-flex justify-content-end gap-2 mb-3">
-    <a asp-action="ExportExcel" class="btn btn-success">
-        Export Excel
-    </a>
+    .sales-card {
+        border: none;
+        border-radius: 18px;
+        box-shadow: 0 8px 25px rgba(0,0,0,.06);
+        overflow: hidden;
+    }
 
-    <a asp-action="ExportPdf" class="btn btn-danger">
-        Export PDF
-    </a>
+    .table thead {
+        background: #0f172a;
+        color: white;
+    }
+
+    .table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .filter-box {
+        background: white;
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.05);
+    }
+
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+        <h2 class="fw-bold mb-1">Sales History</h2>
+        <p class="text-muted mb-0">
+            View and filter transaction history
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+
+        <a asp-action="ExportExcel"
+           class="btn btn-success rounded-pill px-4">
+            <i class="fa fa-file-excel me-1"></i>
+            Export Excel
+        </a>
+
+        <a asp-action="ExportPdf"
+           class="btn btn-danger rounded-pill px-4">
+            <i class="fa fa-file-pdf me-1"></i>
+            Export PDF
+        </a>
+
+    </div>
+
 </div>
 
-<!-- FILTERS (BACK TO SIMPLE FORM) -->
-<form method="get" class="row mb-3">
+<!-- FILTER -->
+<div class="filter-box mb-4">
 
-    <div class="col">
-        <input name="search"
-               class="form-control"
-               placeholder="Product"
-               value="@Context.Request.Query["search"]" />
+    <form method="get">
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+
+                <label class="form-label fw-semibold">
+                    Filter By
+                </label>
+
+                <select id="filterType"
+                        class="form-select">
+
+                    <option value="">
+                        Select Filter
+                    </option>
+
+                    <option value="date">
+                        Date
+                    </option>
+
+                    <option value="cashier">
+                        Cashier
+                    </option>
+
+                    <option value="receipt">
+                        Receipt No
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- DATE -->
+            <div class="col-md-4 d-none"
+                 id="dateFilter">
+
+                <label class="form-label fw-semibold">
+                    Select Date
+                </label>
+
+                <input type="date"
+                       name="date"
+                       class="form-control"
+                       value="@Context.Request.Query["date"]" />
+
+            </div>
+
+            <!-- CASHIER -->
+            <div class="col-md-4 d-none"
+                 id="cashierFilter">
+
+                <label class="form-label fw-semibold">
+                    Cashier Name
+                </label>
+
+                <input type="text"
+                       name="cashier"
+                       class="form-control"
+                       placeholder="Enter cashier name"
+                       value="@Context.Request.Query["cashier"]" />
+
+            </div>
+
+            <!-- RECEIPT -->
+            <div class="col-md-4 d-none"
+                 id="receiptFilter">
+
+                <label class="form-label fw-semibold">
+                    Receipt Number
+                </label>
+
+                <input type="text"
+                       name="receipt"
+                       class="form-control"
+                       placeholder="Enter receipt number"
+                       value="@Context.Request.Query["receipt"]" />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary rounded-pill w-100">
+                        <i class="fa fa-filter me-1"></i>
+                        Filter
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-secondary rounded-pill w-100">
+                        <i class="fa fa-arrow-left me-1"></i>
+                        Back
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<!-- SALES TABLE -->
+<div class="card sales-card">
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th class="ps-4">Product</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Date</th>
+                        <th>Receipt</th>
+                        <th>Cashier</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model.Count > 0)
+                    {
+                        @foreach (var s in Model)
+                        {
+                            <tr>
+
+                                <td class="ps-4 fw-semibold">
+                                    @s.Product?.ProductName
+                                </td>
+
+                                <td>
+                                    @s.Quantity
+                                </td>
+
+                                <td class="fw-semibold text-success">
+                                    UGX @s.TotalAmount.ToString("N0")
+                                </td>
+
+                                <td>
+                                    @(s.SaleDate
+                                    .ToLocalTime()
+                                    .ToString("dd MMM yyyy hh:mm tt"))
+                                </td>
+
+                                <td>
+                                    @(s.ReceiptNumber ?? "N/A")
+                                </td>
+
+                                <td>
+                                    @(s.CashierName ?? "System")
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6"
+                                class="text-center py-5 text-muted">
+
+                                <i class="fa fa-box-open fa-2x mb-3"></i>
+
+                                <div>
+                                    No sales records found
+                                </div>
+
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
     </div>
 
-    <div class="col">
-        <input type="date"
-               name="date"
-               class="form-control"
-               value="@Context.Request.Query["date"]" />
-    </div>
+</div>
 
-    <div class="col">
-        <input name="receipt"
-               class="form-control"
-               placeholder="Receipt No"
-               value="@Context.Request.Query["receipt"]" />
-    </div>
+<script>
 
-    <div class="col">
-        <input name="cashier"
-               class="form-control"
-               placeholder="Cashier"
-               value="@Context.Request.Query["cashier"]" />
-    </div>
+    const filterType =
+        document.getElementById("filterType");
 
-    <div class="col">
-        <button type="submit" class="btn btn-primary w-100">
-            Filter
-        </button>
-    </div>
+    const dateFilter =
+        document.getElementById("dateFilter");
 
-</form>
+    const cashierFilter =
+        document.getElementById("cashierFilter");
 
-<!-- TABLE -->
-<table class="table table-bordered">
-    <thead>
-        <tr>
-            <th>Product</th>
-            <th>Qty</th>
-            <th>Total</th>
-            <th>Date</th>
-            <th>Receipt</th>
-            <th>Cashier</th>
-        </tr>
-    </thead>
+    const receiptFilter =
+        document.getElementById("receiptFilter");
 
-    <tbody>
-        @foreach (var s in Model)
-        {
-            <tr>
-                <td>@s.Product?.ProductName</td>
-                <td>@s.Quantity</td>
-                <td>UGX @s.TotalAmount.ToString("N0")</td>
-                <td>@s.SaleDate.ToString("dd MMM yyyy HH:mm")</td>
-                <td>@(s.ReceiptNumber ?? "N/A")</td>
-                <td>@(s.CashierName ?? "System")</td>
-            </tr>
+    filterType.addEventListener("change", function () {
+
+        // HIDE ALL
+        dateFilter.classList.add("d-none");
+        cashierFilter.classList.add("d-none");
+        receiptFilter.classList.add("d-none");
+
+        // SHOW SELECTED
+        if (this.value === "date") {
+            dateFilter.classList.remove("d-none");
         }
-    </tbody>
-</table>
+
+        else if (this.value === "cashier") {
+            cashierFilter.classList.remove("d-none");
+        }
+
+        else if (this.value === "receipt") {
+            receiptFilter.classList.remove("d-none");
+        }
+
+    });
+
+</script>

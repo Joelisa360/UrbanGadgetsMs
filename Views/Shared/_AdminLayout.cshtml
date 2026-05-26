@@ -191,16 +191,16 @@
             <i class="fa-solid fa-house me-2"></i> Dashboard
         </a>
 
-        <a asp-controller="Categories" asp-action="Index">
-            <i class="fa-solid fa-layer-group me-2"></i> Categories
-        </a>
-
         <a asp-controller="Products" asp-action="Index">
             <i class="fa-solid fa-box me-2"></i> Products
         </a>
+        
+        <a asp-controller="Products" asp-action="OutOfStock">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> Out Of Stock
+        </a>
 
         <a asp-controller="Sales" asp-action="Index">
-            <i class="fa-solid fa-cart-shopping me-2"></i> Sales
+            <i class="fa-solid fa-cart-shopping me-2"></i> Sales History
         </a>
 
         @if (User.IsInRole("Admin"))
@@ -217,14 +217,18 @@
                 <i class="fa-solid fa-wallet me-2"></i> Expenses
             </a>
 
-            <a asp-controller="Report" asp-action="Index">
-                <i class="fa-solid fa-chart-column me-2"></i> Reports
-            </a>
-
             <a asp-controller="Settings" asp-action="Index">
                 <i class="fa-solid fa-gear me-2"></i> Settings
             </a>
+
+            <a asp-controller="Categories" asp-action="Index">
+                <i class="fa-solid fa-layer-group me-2"></i> Categories
+            </a>
         }
+
+        <a asp-controller="Report" asp-action="Index">
+            <i class="fa-solid fa-chart-column me-2"></i> Reports
+        </a>
 
         <hr class="text-secondary" />
 

@@ -4,28 +4,30 @@
 @{
     var settings = _context.AppSettings.FirstOrDefault();
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    bool isAdmin = User.IsInRole("Admin");
 }
 
 <style>
-    .dash-title {
-        font-weight: 700;
-        color: #0f172a;
-    }
-
     .stat-card {
         border: none;
-        border-radius: 18px;
-        padding: 22px;
+        border-radius: 16px;
+        padding: 14px 16px; /* reduced from 22px */
         color: white;
-        box-shadow: 0 8px 25px rgba(0,0,0,.08);
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
         transition: .2s ease;
-        height: 100%;
+        height: 120px; /* reduced from 150px */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
         .stat-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 22px rgba(0,0,0,.12);
         }
 
+    /* COLORS (UNCHANGED) */
     .blue {
         background: linear-gradient(135deg,#2563eb,#1e40af);
     }
@@ -46,17 +48,25 @@
         background: linear-gradient(135deg,#ef4444,#991b1b);
     }
 
+    .dark {
+        background: linear-gradient(135deg,#0f172a,#1e293b);
+    }
+
+    /* TEXT (slightly tightened) */
     .stat-label {
-        font-size: 14px;
-        opacity: .9;
+        font-size: 12px;
+        opacity: 0.85;
+        margin-bottom: 4px;
     }
 
     .stat-value {
-        font-size: 24px;
-        font-weight: bold;
-        margin-top: 8px;
+        font-size: 20px; /* reduced from 24px */
+        font-weight: 700;
+        margin-top: 4px;
+        line-height: 1.2;
     }
 
+    /* section cards unchanged */
     .section-card {
         border: none;
         border-radius: 18px;
@@ -71,74 +81,244 @@
         height: 280px;
         margin: auto;
     }
+
+    body.dark-mode .section-card,
+    body.dark-mode .bg-white {
+        background: #1e293b !important;
+        color: white;
+    }
+
+    body.dark-mode .text-dark {
+        color: white !important;
+    }
 </style>
 
+<!-- HEADER -->
 <div class="bg-white rounded-4 shadow-sm px-4 py-4 mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
         <div>
             <h2 class="fw-bold mb-1 text-dark">
-                Welcome, @(User?.Identity?.Name ?? "Admin")
+                Welcome, @(User?.Identity?.Name ?? "User")
             </h2>
+
             <p class="text-muted mb-0 fs-5">
-                @DateTime.UtcNow.ToString("dddd, MMMM d, yyyy")
+                @DateTime.Now.ToString("dddd, MMMM d, yyyy")
             </p>
         </div>
+
+        @if (ViewBag.TargetReached == true)
+        {
+            <div id="targetAlert" class="alert alert-success mt-3">
+                🎉 Bravo! You’ve hit your monthly target!
+            </div>
+        }
 
         <a asp-controller="Account"
            asp-action="Logout"
            class="btn btn-danger rounded-pill px-4 py-2">
             Logout
         </a>
+
     </div>
 </div>
 
-<!-- STATS -->
+<!--------------------- STATIC CARDS ------------------------->
+<!--<!-- ROW 1 -->
 <div class="row g-4 mb-4">
 
-    <div class="col-md-3">
+    <!-- TODAY SALES -->
+    <div class="@(isAdmin ? "col-lg-3 col-md-6" : "col-lg-3 col-md-3 col-6")">
         <div class="stat-card blue">
             <div class="stat-label">Today's Sales</div>
-            <div class="stat-value" id="dailySales"></div>
+            <div class="stat-value" id="dailySales">UGX 0</div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="stat-card green">
-            <div class="stat-label">Weekly Sales</div>
-            <div class="stat-value" id="weeklySales"></div>
+    @if (isAdmin)
+    {
+        <!-- WEEKLY SALES -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card green">
+                <div class="stat-label">Weekly Sales</div>
+                <div class="stat-value" id="weeklySales">UGX 0</div>
+            </div>
         </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="stat-card purple">
-            <div class="stat-label">Monthly Sales</div>
-            <div class="stat-value" id="monthlySales"></div>
+        <!-- MONTHLY SALES -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card purple">
+                <div class="stat-label">Monthly Sales</div>
+                <div class="stat-value" id="monthlySales">UGX 0</div>
+            </div>
         </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="stat-card orange">
-            <div class="stat-label">Net Profit</div>
-            <div class="stat-value" id="profit"></div>
+        <!-- PROFIT -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card orange">
+                <div class="stat-label">Net Profit</div>
+                <div class="stat-value" id="profit">UGX 0</div>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <!-- MONTHLY TARGET -->
+        <div class="col-lg-3 col-md-3 col-6">
+            <div class="stat-card dark">
 
-    <div class="col-md-3">
-        <div class="stat-card danger">
-            <div class="stat-label">Monthly Expenses</div>
-            <div class="stat-value" id="monthlyExpenses"></div>
+                <div class="stat-label">
+                    Monthly Target
+                </div>
+
+                <div class="stat-value"
+                     id="monthlyTargetAmount">
+                    UGX 0
+                </div>
+
+                <div class="stat-label small"
+                     id="monthlyTargetPercent">
+                    0% achieved
+                </div>
+
+                <div class="progress mt-1"
+                     style="height:5px; border-radius:10px;">
+
+                    <div class="progress-bar bg-success"
+                         id="monthlyTargetBar"
+                         role="progressbar"
+                         style="width:0%">
+                    </div>
+
+                </div>
+
+            </div>
         </div>
-    </div>
+
+        <!-- DISCOUNTS -->
+        <div class="col-lg-3 col-md-3 col-6">
+            <div class="stat-card orange">
+                <div class="stat-label">Today's Discounts</div>
+
+                <div class="stat-value"
+                     id="todayDiscounts">
+                    UGX 0
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP ITEM -->
+        <div class="col-lg-3 col-md-3 col-6">
+            <div class="stat-card purple">
+
+                <div class="stat-label">
+                    Most Sold Item
+                </div>
+
+                <div class="stat-value"
+                     id="topItemName">
+                    No Data
+                </div>
+
+                <div class="stat-label"
+                     id="topItemQty">
+                </div>
+
+            </div>
+        </div>
+    }
 
 </div>
 
-<!-- CHARTS -->
+
+@if (isAdmin)
+{
+    <!-- ROW 2 -->
+    <div class="row g-4 mb-4">
+
+        <!-- EXPENSES -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card danger">
+                <div class="stat-label">Monthly Expenses</div>
+                <div class="stat-value" id="monthlyExpenses">UGX 0</div>
+            </div>
+        </div>
+
+        <!-- TARGET -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card dark">
+
+                <div class="stat-label">
+                    Monthly Target
+                </div>
+
+                <div class="stat-value"
+                     id="monthlyTargetAmount">
+                    UGX 0
+                </div>
+
+                <div class="stat-label small"
+                     id="monthlyTargetPercent">
+                    0% achieved
+                </div>
+
+                <div class="progress mt-1"
+                     style="height:5px; border-radius:10px;">
+
+                    <div class="progress-bar bg-success"
+                         id="monthlyTargetBar"
+                         role="progressbar"
+                         style="width:0%">
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DISCOUNTS -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card orange">
+                <div class="stat-label">Today's Discounts</div>
+
+                <div class="stat-value"
+                     id="todayDiscounts">
+                    UGX 0
+                </div>
+            </div>
+        </div>
+
+        <!-- TOP ITEM -->
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card purple">
+
+                <div class="stat-label">
+                    Most Sold Item
+                </div>
+
+                <div class="stat-value"
+                     id="topItemName">
+                    No Data
+                </div>
+
+                <div class="stat-label"
+                     id="topItemQty">
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+}
+
+<!-- CHART -->
 <div class="section-card mb-4">
     <h5>Sales Trend</h5>
     <canvas id="salesChart" height="90"></canvas>
 </div>
 
-<div class="row g-4">
+<!-- SECOND ROW -->
+<div class="row g-4 mb-4">
 
     <div class="col-lg-8">
         <div class="section-card">
@@ -147,50 +327,185 @@
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="section-card text-center">
-            <h5>Expense Breakdown</h5>
-            <div class="pie-wrapper">
-                <canvas id="expensePieChart"></canvas>
+    @if (isAdmin)
+    {
+        <div class="col-lg-4">
+            <div class="section-card text-center">
+                <h5>Expense Breakdown</h5>
+
+                <div class="pie-wrapper">
+                    <canvas id="expensePieChart"></canvas>
+                </div>
             </div>
         </div>
-    </div>
+    }
 
 </div>
 
+<!-- QUICK ACTION -->
+@if (isAdmin)
+{
+    <div class="mb-4">
+        <a asp-controller="Products"
+           asp-action="OutOfStock"
+           class="btn btn-danger">
+
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            Out Of Stock Items
+        </a>
+    </div>
+}
+
 <!-- ALERTS -->
-<div id="lowStockAlert" class="alert alert-warning mt-4 d-none"></div>
-<div id="expenseAlert" class="alert alert-danger mt-3 d-none"></div>
+<div id="lowStockAlert"
+     class="alert alert-warning mt-4 d-none">
+</div>
+
+<div id="expenseAlert"
+     class="alert alert-danger mt-3 d-none">
+</div>
 
 <script>
+
     document.addEventListener("DOMContentLoaded", function () {
 
         loadDashboard();
         loadSalesChart();
         loadTopProducts();
 
-        var lowStock = @(settings?.LowStockAlerts == true ? "true" : "false");
-        var expenseAlert = @(settings?.ExpenseAlerts == true ? "true" : "false");
+        var lowStock =
+            @(settings?.LowStockAlerts == true ? "true" : "false");
 
-        if (lowStock === "true") checkLowStock();
-        if (expenseAlert === "true") checkExpenseAlert();
+        var expenseAlert =
+            @(settings?.ExpenseAlerts == true ? "true" : "false");
+
+        if (lowStock === "true") {
+            checkLowStock();
+        }
+
+        if (expenseAlert === "true") {
+            checkExpenseAlert();
+        }
     });
 
+
+    // LOAD DASHBOARD
     async function loadDashboard() {
+
         const res = await fetch('/Home/GetDashboardData');
         const data = await res.json();
 
-        document.getElementById("dailySales").innerText = "UGX " + (data.daily ?? 0).toLocaleString();
-        document.getElementById("weeklySales").innerText = "UGX " + (data.weekly ?? 0).toLocaleString();
-        document.getElementById("monthlySales").innerText = "UGX " + (data.monthly ?? 0).toLocaleString();
-        document.getElementById("monthlyExpenses").innerText = "UGX " + (data.expenses ?? 0).toLocaleString();
-        document.getElementById("profit").innerText = "UGX " + (data.profit ?? 0).toLocaleString();
+        // TODAY SALES
+        if (document.getElementById("dailySales")) {
 
-        if (data.byCategory?.length) {
+            document.getElementById("dailySales").innerText =
+                "UGX " + (data.daily ?? 0).toLocaleString();
+        }
+
+        // WEEKLY SALES
+        if (document.getElementById("weeklySales")) {
+
+            document.getElementById("weeklySales").innerText =
+                "UGX " + (data.weekly ?? 0).toLocaleString();
+        }
+
+        // MONTHLY SALES
+        if (document.getElementById("monthlySales")) {
+
+            document.getElementById("monthlySales").innerText =
+                "UGX " + (data.monthly ?? 0).toLocaleString();
+        }
+
+        // MONTHLY EXPENSES
+        if (document.getElementById("monthlyExpenses")) {
+
+            document.getElementById("monthlyExpenses").innerText =
+                "UGX " + (data.expenses ?? 0).toLocaleString();
+        }
+
+        // PROFIT
+        if (document.getElementById("profit")) {
+
+            document.getElementById("profit").innerText =
+                "UGX " + (data.profit ?? 0).toLocaleString();
+        }
+
+        // MONTHLY TARGET
+        if (document.getElementById("monthlyTargetAmount")) {
+
+            document.getElementById("monthlyTargetAmount").innerText =
+                "UGX " + (data.target ?? 0).toLocaleString();
+
+            document.getElementById("monthlyTargetPercent").innerText =
+                (data.targetPercent ?? 0).toFixed(1) + "% achieved";
+
+            document.getElementById("monthlyTargetBar").style.width =
+                (data.targetPercent ?? 0) + "%";
+        }
+
+           // TARGET ALERT
+    if (data.targetReached) {
+
+        if (!document.getElementById("targetHitAlert")) {
+
+            const alert = document.createElement("div");
+
+            alert.id = "targetHitAlert";
+
+            alert.className =
+                "alert alert-success mb-0 py-2 px-3";
+
+            alert.innerHTML =
+                "🎉 Bravo! You've hit your monthly sales target!";
+
+            const headerSection =
+                document.querySelector(".d-flex.justify-content-between");
+
+            const logoutButton =
+                headerSection.querySelector("a.btn-danger");
+
+            headerSection.insertBefore(alert, logoutButton);
+        }
+    }
+
+        // TODAY DISCOUNTS
+        if (document.getElementById("todayDiscounts")) {
+
+            document.getElementById("todayDiscounts").innerText =
+                "UGX " + (data.totalDiscountToday ?? 0).toLocaleString();
+        }
+
+        // MOST SOLD ITEM
+        if (document.getElementById("topItemName")) {
+
+            if (data.topItem) {
+
+                document.getElementById("topItemName").innerText =
+                    data.topItem.name;
+
+                document.getElementById("topItemQty").innerText =
+                    data.topItem.qty + " sold this week";
+            }
+            else {
+
+                document.getElementById("topItemName").innerText =
+                    "No Data";
+
+                document.getElementById("topItemQty").innerText = "";
+            }
+        }
+
+        // EXPENSE PIE CHART
+        if (document.getElementById("expensePieChart")
+            && data.byCategory?.length) {
+
             new Chart(document.getElementById("expensePieChart"), {
+
                 type: "pie",
+
                 data: {
                     labels: data.byCategory.map(x => x.category),
+
                     datasets: [{
                         data: data.byCategory.map(x => x.total)
                     }]
@@ -199,58 +514,91 @@
         }
     }
 
+
     async function loadSalesChart() {
+
+        if (!document.getElementById("salesChart"))
+            return;
+
         const res = await fetch('/Home/GetSalesChart');
         const data = await res.json();
 
         new Chart(document.getElementById("salesChart"), {
+
             type: "line",
+
             data: {
                 labels: data.map(x => x.date),
+
                 datasets: [{
                     label: "Sales",
-                    data: data.map(x => x.total)
+                    data: data.map(x => x.total),
+                    tension: 0.4
                 }]
             }
         });
     }
 
+
     async function loadTopProducts() {
+
+        if (!document.getElementById("topProductsChart"))
+            return;
+
         const res = await fetch('/Home/GetTopProducts');
         const data = await res.json();
 
         new Chart(document.getElementById("topProductsChart"), {
+
             type: "bar",
+
             data: {
                 labels: data.map(x => x.product),
+
                 datasets: [{
-                    label: "Top Products",
+                    label: "Products Sold",
                     data: data.map(x => x.total)
                 }]
             }
         });
     }
 
+
     async function checkLowStock() {
+
         const res = await fetch('/Home/GetLowStock');
         const data = await res.json();
 
         if (data.length > 0) {
-            document.getElementById("lowStockAlert").classList.remove("d-none");
+
+            document.getElementById("lowStockAlert")
+                .classList.remove("d-none");
+
             document.getElementById("lowStockAlert").innerHTML =
-                data.map(p => `${p.name} (Stock: ${p.qty})`).join("<br>");
+                "<strong>Low Stock Alert</strong><br>" +
+                data.map(p =>
+                    `${p.name} (Stock: ${p.qty})`
+                ).join("<br>");
         }
     }
 
+
     async function checkExpenseAlert() {
+
         const res = await fetch('/Home/GetExpenseAlert');
         const data = await res.json();
 
         if (data.exceeded) {
-            const box = document.getElementById("expenseAlert");
+
+            const box =
+                document.getElementById("expenseAlert");
+
             box.classList.remove("d-none");
+
             box.innerHTML =
-                "Warning: Expenses exceeded UGX " + data.total.toLocaleString();
+                "Warning: Expenses exceeded UGX "
+                + data.total.toLocaleString();
         }
     }
+
 </script>

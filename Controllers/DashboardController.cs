@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace UrbanGadgets.Controllers
+namespace UrbanGadgetsMS.Controllers
 {
     [Authorize(Roles = "Admin,Cashier")]
     public class DashboardController : Controller

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UrbanGadgets.Data;
 using UrbanGadgets.Models;
@@ -14,36 +15,76 @@ namespace UrbanGadgetsMS.Controllers
             _context = context;
         }
 
-        // LIST
-        public IActionResult Index()
-        {
-            var today = DateTime.UtcNow.Date;
-            var week = today.AddDays(-7);
 
+        //========================= REPORTS =====================
+        public IActionResult Index(DateTime? restockDate, string activeTab = null)
+        {
+            // DEFAULT TAB
+            string tab = string.IsNullOrEmpty(activeTab) ? "daily" : activeTab;
+
+            // UTC SAFE
+            var today = DateTime.UtcNow.Date;
+
+            var todayStart = DateTime.SpecifyKind(today, DateTimeKind.Utc);
+            var tomorrow = todayStart.AddDays(1);
+            var weekStart = todayStart.AddDays(-7);
+
+            // DAILY SALES
             ViewBag.DailySales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate >= today && x.SaleDate < today.AddDays(1))
+                .Where(x => x.SaleDate >= todayStart &&
+                            x.SaleDate < tomorrow)
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
 
+            // WEEKLY SALES
             ViewBag.WeeklySales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate >= week)
+                .Where(x => x.SaleDate >= weekStart &&
+                            x.SaleDate < tomorrow)
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
 
-            ViewBag.Restocks = _context.RestockReports
-                .OrderByDescending(x => x.ReportDate)
-                .ToList();
+            // RESTOCK FILTER
+            if (restockDate.HasValue)
+            {
+                tab = "restock"; // 🔥 FORCE RESTOCK TAB WHEN FILTERING
+
+                var filterStart = DateTime.SpecifyKind(restockDate.Value.Date, DateTimeKind.Utc);
+                var filterEnd = filterStart.AddDays(1);
+
+                ViewBag.Restocks = _context.RestockReports
+                    .Where(x => x.ReportDate >= filterStart &&
+                                x.ReportDate < filterEnd)
+                    .OrderByDescending(x => x.ReportDate)
+                    .ToList();
+
+                ViewBag.RestockDate = filterStart.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                ViewBag.Restocks = _context.RestockReports
+                    .OrderByDescending(x => x.ReportDate)
+                    .Take(5)
+                    .ToList();
+
+                ViewBag.RestockDate = "";
+            }
 
             ViewBag.Categories = _context.Categories
                 .OrderBy(x => x.CategoryName)
                 .ToList();
 
+            // FINAL SINGLE SOURCE OF TRUTH
+            ViewBag.ActiveTab = tab;
+
             return View();
         }
 
-        // CREATE PAGE
+
+        //======================= CREATE PAGE=================================
+
+        [Authorize(Roles = "Admin")]
         public IActionResult CreateRestock()
         {
             ViewBag.Categories = _context.Categories.ToList();
@@ -52,7 +93,8 @@ namespace UrbanGadgetsMS.Controllers
             return View();
         }
 
-
+        //======================== SAVE ===========================
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult SaveRestock(RestockReport report)
         {
@@ -141,6 +183,8 @@ namespace UrbanGadgetsMS.Controllers
             return RedirectToAction("Index");
         }
 
+        //========================= VIEW RESTOCKS =======================
+        [Authorize(Roles = "Admin")]
         public IActionResult ViewReport(int id)
         {
             var report = _context.RestockReports
@@ -152,6 +196,8 @@ namespace UrbanGadgetsMS.Controllers
 
             return View(report);
         }
+
+
 
         [HttpGet]
         public IActionResult GetProductInfo(string name)
@@ -169,6 +215,66 @@ namespace UrbanGadgetsMS.Controllers
                 price = product.Price,
                 buying = product.BuyingPrice
             });
+        }
+
+
+
+        //========================= EXPORT EXCEL ================================
+        public IActionResult ExportDailySales()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var start = DateTime.SpecifyKind(
+                today,
+                DateTimeKind.Utc);
+
+            var end = start.AddDays(1);
+
+            var sales = _context.Sales
+                .Include(x => x.Product)
+                .Where(x => x.SaleDate >= start &&
+                            x.SaleDate < end)
+                .OrderByDescending(x => x.SaleDate)
+                .ToList();
+
+            using var workbook = new ClosedXML.Excel.XLWorkbook();
+
+            var worksheet = workbook.Worksheets.Add("Daily Sales");
+
+            worksheet.Cell(1, 1).Value = "Receipt";
+            worksheet.Cell(1, 2).Value = "Product";
+            worksheet.Cell(1, 3).Value = "Quantity";
+            worksheet.Cell(1, 4).Value = "Total";
+            worksheet.Cell(1, 5).Value = "Cashier";
+            worksheet.Cell(1, 6).Value = "Date";
+
+            int row = 2;
+
+            foreach (var s in sales)
+            {
+                worksheet.Cell(row, 1).Value = s.ReceiptNumber;
+                worksheet.Cell(row, 2).Value = s.Product?.ProductName;
+                worksheet.Cell(row, 3).Value = s.Quantity;
+                worksheet.Cell(row, 4).Value = s.TotalAmount;
+                worksheet.Cell(row, 5).Value = s.CashierName;
+
+                worksheet.Cell(row, 6).Value =
+                    s.SaleDate.ToLocalTime()
+                    .ToString("dd MMM yyyy hh:mm tt");
+
+                row++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                $"DailySales-{today:yyyyMMdd}.xlsx");
         }
     }
 }

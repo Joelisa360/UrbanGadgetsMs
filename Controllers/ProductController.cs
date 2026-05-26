@@ -169,5 +169,17 @@ namespace UrbanGadgetsMS.Controllers
 
             return RedirectToAction("Index");
         }
+
+        //================== OUT OF STOCK ========================
+        public IActionResult OutOfStock()
+        {
+            var items = _context.Products
+                .Include(p => p.Category)
+                .Where(p => p.Quantity <= 0)
+                .OrderBy(p => p.ProductName)
+                .ToList();
+
+            return View(items);
+        }
     }
 }

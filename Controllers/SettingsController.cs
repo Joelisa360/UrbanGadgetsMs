@@ -2,7 +2,7 @@
 using UrbanGadgets.Data;
 using UrbanGadgets.Models;
 
-namespace UrbanGadgets.Controllers
+namespace UrbanGadgetsMS.Controllers
 {
     public class SettingsController : Controller
     {
@@ -64,8 +64,8 @@ namespace UrbanGadgets.Controllers
 
                 // Security
                 settings.PinLock = model.PinLock;
-                settings.PinCode = model.PinCode;                 // FIXED
-                settings.RequirePinOnLogin = model.RequirePinOnLogin; // FIXED
+                settings.PinCode = model.PinCode;                 
+                settings.RequirePinOnLogin = model.RequirePinOnLogin; 
                 settings.AutoLogout = model.AutoLogout;
 
                 // Sales
@@ -74,7 +74,8 @@ namespace UrbanGadgets.Controllers
                 settings.AllowDiscounts = model.AllowDiscounts;
 
                 // Expense Limit
-                settings.MonthlyExpenseLimit = model.MonthlyExpenseLimit; // FIXED
+                settings.MonthlyExpenseLimit = model.MonthlyExpenseLimit; 
+                settings.MonthlySalesTarget = model.MonthlySalesTarget;
             }
 
             _context.SaveChanges();

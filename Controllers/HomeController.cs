@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UrbanGadgets.Data;
 
 namespace UrbanGadgetsMS.Controllers
@@ -14,37 +15,105 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult Index()
         {
-            var today = DateTime.Today;
-            var week = today.AddDays(-7);
-            var month = today.AddMonths(-1);
+            // PostgreSQL-safe UTC dates
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = DateTime.SpecifyKind(today.AddDays(1), DateTimeKind.Utc);
 
+            var weekStart = DateTime.SpecifyKind(today.AddDays(-7), DateTimeKind.Utc);
+            var monthStart = DateTime.SpecifyKind(new DateTime(today.Year, today.Month, 1), DateTimeKind.Utc);
+
+            // DAILY SALES
             var dailySales = _context.Sales
-                .Where(x => x.SaleDate >= today)
+                .Where(x => x.SaleDate >= today &&
+                            x.SaleDate < tomorrow)
                 .Sum(x => (decimal?)x.TotalAmount) ?? 0;
 
+            // WEEKLY SALES
             var weeklySales = _context.Sales
-                .Where(x => x.SaleDate >= week)
+                .Where(x => x.SaleDate >= weekStart)
                 .Sum(x => (decimal?)x.TotalAmount) ?? 0;
 
+            // MONTHLY SALES
             var monthlySales = _context.Sales
-                .Where(x => x.SaleDate >= month)
+                .Where(x => x.SaleDate >= monthStart)
                 .Sum(x => (decimal?)x.TotalAmount) ?? 0;
 
+            // MONTHLY EXPENSES
             var monthlyExpenses = _context.Expenses
-                .Where(x => x.ExpenseDate >= month)
+                .Where(x => x.ExpenseDate >= monthStart)
                 .Sum(x => (decimal?)x.Amount) ?? 0;
 
+            // GROSS PROFIT
             var grossProfit = _context.Sales
-                .Where(x => x.SaleDate >= month)
+                .Where(x => x.SaleDate >= monthStart)
                 .Sum(x => (decimal?)x.Profit) ?? 0;
 
+            // NET PROFIT
             var profit = grossProfit - monthlyExpenses;
 
+            // TARGET %
+            var settings = _context.AppSettings.FirstOrDefault();
+
+            decimal target = settings?.MonthlySalesTarget ?? 5000000;
+
+            var targetPercent = target == 0
+                ? 0
+                : (monthlySales / target) * 100;
+
+            var targetReached = monthlySales >= target;
+
+            // MOST SOLD ITEM (WEEKLY)
+            var topItem = _context.Sales
+                .Include(s => s.Product)
+                .Where(s => s.SaleDate >= weekStart)
+                .GroupBy(s => s.Product.ProductName)
+                .Select(g => new
+                {
+                    Name = g.Key,
+                    Qty = g.Sum(x => x.Quantity)
+                })
+                .OrderByDescending(x => x.Qty)
+                .FirstOrDefault();
+
+            // MOST SOLD CATEGORY (WEEKLY)
+            var topCategory = _context.Sales
+                .Include(s => s.Product)
+                .ThenInclude(p => p.Category)
+                .Where(s => s.SaleDate >= weekStart)
+                .GroupBy(s => s.Product.Category.CategoryName)
+                .Select(g => new
+                {
+                    Name = g.Key,
+                    Qty = g.Sum(x => x.Quantity)
+                })
+                .OrderByDescending(x => x.Qty)
+                .FirstOrDefault();
+
+            // DAILY DISCOUNTS
+            var totalDiscountToday = _context.Sales
+                .Where(s => s.SaleDate >= today &&
+                            s.SaleDate < tomorrow)
+                .Sum(s => (decimal?)s.Discount) ?? 0;
+
+            // OUT OF STOCK
+            var outOfStock = _context.Products
+                .Count(p => p.Quantity <= 0);
+
+            // VIEWBAGS
             ViewBag.DailySales = dailySales;
-            ViewBag.WeeklySales = weeklySales;   // FIX
+            ViewBag.WeeklySales = weeklySales;
             ViewBag.MonthlySales = monthlySales;
             ViewBag.MonthlyExpenses = monthlyExpenses;
             ViewBag.Profit = profit;
+
+            ViewBag.Target = target;
+            ViewBag.TargetPercent = targetPercent;
+            ViewBag.TargetReached = targetReached;
+
+            ViewBag.TopItem = topItem;
+            ViewBag.TopCategory = topCategory;
+            ViewBag.TotalDiscountToday = totalDiscountToday;
+            ViewBag.OutOfStock = outOfStock;
 
             return View();
         }
@@ -53,42 +122,74 @@ namespace UrbanGadgetsMS.Controllers
         public IActionResult GetDashboardData()
         {
             var today = DateTime.UtcNow.Date;
-            var week = today.AddDays(-7);
-            var month = today.AddMonths(-1);
+            var tomorrow = today.AddDays(1);
+
+            var weekStart = today.AddDays(-7);
+            var monthStart = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
             var daily = _context.Sales
-                .Where(s => s.SaleDate >= today)
+                .Where(s => s.SaleDate >= today &&
+                            s.SaleDate < tomorrow)
                 .Sum(s => (decimal?)s.TotalAmount) ?? 0;
 
             var weekly = _context.Sales
-                .Where(s => s.SaleDate >= week)
+                .Where(s => s.SaleDate >= weekStart)
                 .Sum(s => (decimal?)s.TotalAmount) ?? 0;
 
             var monthly = _context.Sales
-                .Where(s => s.SaleDate >= month)
+                .Where(s => s.SaleDate >= monthStart)
                 .Sum(s => (decimal?)s.TotalAmount) ?? 0;
 
-            // ✅ REAL PROFIT CALCULATION
             var monthlyProfit = _context.Sales
-                .Where(s => s.SaleDate >= month)
+                .Where(s => s.SaleDate >= monthStart)
                 .Sum(s => (decimal?)s.Profit) ?? 0;
 
             var expenses = _context.Expenses
-                .Where(e => e.ExpenseDate >= month)
+                .Where(e => e.ExpenseDate >= monthStart)
                 .Sum(e => (decimal?)e.Amount) ?? 0;
 
-
             var byCategory = _context.Expenses
-                .Where(e => e.ExpenseDate >= month)
+                .Where(e => e.ExpenseDate >= monthStart)
                 .GroupBy(e => e.Category)
                 .Select(g => new
                 {
                     category = g.Key.ToString(),
-                    Total = g.Sum(x => x.Amount)
+                    total = g.Sum(x => x.Amount)
                 })
                 .ToList();
 
             var profit = monthlyProfit - expenses;
+
+            // TARGET
+            var settings = _context.AppSettings.FirstOrDefault();
+
+            decimal target =
+                settings?.MonthlySalesTarget ?? 5000000;
+
+            var targetPercent = target == 0
+                ? 0
+                : (monthly / target) * 100;
+
+            var targetReached = monthly >= target;
+
+            // MOST SOLD ITEM THIS WEEK
+            var topItem = _context.Sales
+                .Include(s => s.Product)
+                .Where(s => s.SaleDate >= weekStart)
+                .GroupBy(s => s.Product.ProductName)
+                .Select(g => new
+                {
+                    name = g.Key,
+                    qty = g.Sum(x => x.Quantity)
+                })
+                .OrderByDescending(x => x.qty)
+                .FirstOrDefault();
+
+            // TODAY DISCOUNTS
+            var totalDiscountToday = _context.Sales
+                .Where(s => s.SaleDate >= today &&
+                            s.SaleDate < tomorrow)
+                .Sum(s => (decimal?)s.Discount) ?? 0;
 
             return Json(new
             {
@@ -97,7 +198,14 @@ namespace UrbanGadgetsMS.Controllers
                 monthly,
                 expenses,
                 profit,
-                byCategory
+                byCategory,
+
+                target,
+                targetPercent,
+                targetReached,
+
+                totalDiscountToday,
+                topItem
             });
         }
 
@@ -113,8 +221,10 @@ namespace UrbanGadgetsMS.Controllers
             var data = last7Days.Select(day => new
             {
                 date = day.ToString("dd MMM"),
+
                 total = _context.Sales
-                    .Where(s => s.SaleDate.Date == day.Date)
+                    .Where(s => s.SaleDate >= day &&
+                                s.SaleDate < day.AddDays(1))
                     .Sum(s => (decimal?)s.TotalAmount) ?? 0
             });
 
@@ -124,6 +234,7 @@ namespace UrbanGadgetsMS.Controllers
         public IActionResult GetTopProducts()
         {
             var data = _context.Sales
+                .Include(s => s.Product)
                 .GroupBy(s => s.ProductId)
                 .Select(g => new
                 {

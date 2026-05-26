@@ -1,0 +1,155 @@
+﻿@model dynamic
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Create Restock";
+}
+
+<h2 class="mb-4">Create Restock</h2>
+
+<form asp-controller="Report"
+      asp-action="SaveRestock"
+      method="post">
+
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body">
+
+          
+
+            <table class="table table-bordered" id="restockTable">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Qty</th>
+                        <th>Buying</th>
+                        <th>Selling</th>
+                        <th width="70"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>
+                            <input name="Items[0].ProductName"
+                                   class="form-control product-name"
+                                   placeholder="Product name" />
+                        </td>
+
+                        <td>
+                            <select name="Items[0].CategoryName"
+                                    class="form-control category-select">
+
+                                <option value="">Select category</option>
+
+                                @foreach (var c in ViewBag.Categories)
+                                {
+                                    <option value="@c.CategoryName">@c.CategoryName</option>
+                                }
+
+                                <option value="__new">+ Add Category</option>
+
+                            </select>
+                        </td>
+
+                        <td>
+                            <input name="Items[0].Quantity"
+                                   type="number"
+                                   class="form-control"
+                                   min="1" />
+                        </td>
+
+                        <td>
+                            <input name="Items[0].BuyingPrice"
+                                   type="number"
+                                   class="form-control buying-price" />
+                        </td>
+
+                        <td>
+                            <input name="Items[0].Price"
+                                   type="number"
+                                   class="form-control selling-price" />
+                        </td>
+
+                        <td>
+                            <button type="button"
+                                    class="btn btn-danger btn-sm"
+                                    onclick="removeRow(this)">
+                                X
+                            </button>
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+            <div class="text-end mb-3">
+                <button type="button"
+                        class="btn btn-primary"
+                        onclick="addRow()">
+                    + Add Product
+                </button>
+            </div>
+
+            <button class="btn btn-success">
+                Save Restock
+            </button>
+
+        </div>
+    </div>
+
+</form>
+
+<script>
+    let rowIndex = 1;
+
+    function addRow() {
+
+        const table = document.getElementById("restockTable").getElementsByTagName("tbody")[0];
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>
+                <input name="Items[${rowIndex}].ProductName" class="form-control" />
+            </td>
+
+            <td>
+                <select name="Items[${rowIndex}].CategoryName" class="form-control">
+                    <option value="">Select category</option>
+
+                    @foreach (var c in ViewBag.Categories)
+                    {
+                            <option value="@c.CategoryName">@c.CategoryName</option>
+                    }
+                </select>
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].Quantity" type="number" class="form-control" min="1" />
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].BuyingPrice" type="number" class="form-control" />
+            </td>
+
+            <td>
+                <input name="Items[${rowIndex}].Price" type="number" class="form-control" />
+            </td>
+
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>
+            </td>
+        `;
+
+        table.appendChild(row);
+
+        rowIndex++;
+    }
+
+    function removeRow(btn) {
+        btn.closest("tr").remove();
+    }
+</script>

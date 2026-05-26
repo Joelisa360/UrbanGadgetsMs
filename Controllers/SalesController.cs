@@ -21,33 +21,60 @@ namespace UrbanGadgetsMS.Controllers
         // =========================
         // 1. SALES LIST (HISTORY)
         // =========================
-        
 
-    public IActionResult Index(string search, string cashier, string receipt, DateTime? date)
-    {
-        var sales = _context.Sales
-            .Include(s => s.Product)
-            .AsQueryable();
 
-        if (!string.IsNullOrEmpty(search))
-            sales = sales.Where(s => s.Product.ProductName.Contains(search));
+        public IActionResult Index(
+          string? cashier,
+          string? receipt,
+          DateTime? date)
+        {
+            var sales = _context.Sales
+                .Include(s => s.Product)
+                .AsQueryable();
 
-        if (!string.IsNullOrEmpty(cashier))
-            sales = sales.Where(s => s.CashierName.Contains(cashier));
+            // FILTER BY DATE
+            if (date.HasValue)
+            {
+                var start = DateTime.SpecifyKind(
+                    date.Value.Date,
+                    DateTimeKind.Utc);
 
-        if (!string.IsNullOrEmpty(receipt))
-            sales = sales.Where(s => s.ReceiptNumber.Contains(receipt));
+                var end = start.AddDays(1);
 
-        if (date.HasValue)
-            sales = sales.Where(s => s.SaleDate.Date == date.Value.Date);
+                sales = sales.Where(s =>
+                    s.SaleDate >= start &&
+                    s.SaleDate < end);
+            }
 
-        return View(sales.ToList());
-    }
+            // FILTER BY CASHIER
+            if (!string.IsNullOrWhiteSpace(cashier))
+            {
+                sales = sales.Where(s =>
+                    s.CashierName != null &&
+                    s.CashierName.ToLower()
+                        .Contains(cashier.ToLower()));
+            }
 
-    // =========================
-    // 2. SELL PAGE (GET)
-    // =========================
-    public IActionResult Sell(int productId)
+            // FILTER BY RECEIPT
+            if (!string.IsNullOrWhiteSpace(receipt))
+            {
+                sales = sales.Where(s =>
+                    s.ReceiptNumber != null &&
+                    s.ReceiptNumber.ToLower()
+                        .Contains(receipt.ToLower()));
+            }
+
+            var model = sales
+                .OrderByDescending(s => s.SaleDate)
+                .ToList();
+
+            return View(model);
+        }
+
+        // =========================
+        // 2. SELL PAGE (GET)
+        // =========================
+        public IActionResult Sell(int productId)
         {
             var product = _context.Products.FirstOrDefault(p => p.Id == productId);
 
@@ -123,7 +150,7 @@ namespace UrbanGadgetsMS.Controllers
             sale.ReceiptNumber = "INV-" + DateTime.UtcNow.Ticks.ToString().Substring(10);
 
             // NEW: cashier
-            sale.CashierName = User.Identity.Name ?? "Admin";
+            sale.CashierName = User.Identity?.Name ?? "Admin";
 
             // Save sale
             _context.Sales.Add(sale);
@@ -173,7 +200,7 @@ namespace UrbanGadgetsMS.Controllers
             var product = _context.Products
                 .FirstOrDefault(p => p.Id == sale.ProductId);
 
-            var category = _context.Categories
+            var category = product == null ? null : _context.Categories
                 .FirstOrDefault(c => c.Id == product.CategoryId);
 
             ViewBag.Product = product;
