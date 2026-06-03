@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UrbanGadgetsMS.Data;
 
@@ -169,6 +170,26 @@ namespace UrbanGadgetsMS.Controllers
             var settings = isSuperAdmin
                 ? _context.AppSettings.FirstOrDefault()
                 : _context.AppSettings.FirstOrDefault(x => x.BusinessId == businessId.Value);
+            var totalDiscountToday = _context.Sales
+                .Where(s =>
+                (isSuperAdmin || s.BusinessId == businessId) &&
+                s.SaleDate >= today &&
+                s.SaleDate < today.AddDays(1))
+                .Sum(s => (decimal?)s.Discount) ?? 0;
+
+            var topItem = _context.Sales
+                .Include(s => s.Product)
+                .Where(s =>
+                    (isSuperAdmin || s.BusinessId == businessId) &&
+                    s.SaleDate >= weekStart)
+                .GroupBy(s => s.Product.ProductName)
+                .Select(g => new
+                {
+                    name = g.Key,
+                    qty = g.Sum(x => x.Quantity)
+                })
+                .OrderByDescending(x => x.qty)
+                .FirstOrDefault();
 
             decimal target = settings?.MonthlySalesTarget ?? 5_000_000;
 
@@ -182,7 +203,9 @@ namespace UrbanGadgetsMS.Controllers
                 expenses,
                 profit,
                 target,
-                targetPercent
+                targetPercent,
+                totalDiscountToday,
+                topItem
             });
         }
 
