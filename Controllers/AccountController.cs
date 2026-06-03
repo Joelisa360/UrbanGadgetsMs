@@ -2,74 +2,25 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
-using UrbanGadgets.ViewModels;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
+
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public AccountController(AppDbContext context)
+            : base(context)
         {
-            _context = context;
         }
 
-        public IActionResult Login()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Login(LoginVM model)
-        {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var user = _context.Users.FirstOrDefault(x => x.Username == model.Username);
-
-            if (user == null)
-            {
-                ViewBag.Error = "Username or password is incorrect";
-                return View(model);
-            }
-
-            bool valid = BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash);
-
-            if (!valid)
-            {
-                ViewBag.Error = "Username or password is incorrect";
-                return View(model);
-            }
-
-            if (!user.IsActive)
-            {
-                ViewBag.Error = "Account is disabled";
-                return View(model);
-            }
-
-            var settings = _context.AppSettings.FirstOrDefault();
-
-            // PIN REQUIRED
-            if (settings?.PinLock == true && settings.RequirePinOnLogin)
-            {
-                HttpContext.Session.SetString("PendingUser", user.Username);
-                return RedirectToAction("EnterPin");
-            }
-
-            // NORMAL LOGIN
-            await SignUserIn(user);
-
-            return RedirectToAction("Index", "Dashboard");
-        }
-
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login");
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> Logout()
+        //{
+        //    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        //    return RedirectToAction("Login");
+        //}
 
         public IActionResult ChangePassword()
         {
@@ -84,7 +35,8 @@ namespace UrbanGadgetsMS.Controllers
 
             var username = User.Identity?.Name;
 
-            var user = _context.Users.FirstOrDefault(x => x.Username == username);
+            var user = _context.Users
+                .FirstOrDefault(x => x.Username == username);
 
             if (user == null)
             {
@@ -93,7 +45,7 @@ namespace UrbanGadgetsMS.Controllers
                 return RedirectToAction("Login");
             }
 
-            bool valid = BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash);
+            var valid = BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash);
 
             if (!valid)
             {
@@ -120,14 +72,12 @@ namespace UrbanGadgetsMS.Controllers
         {
             var settings = _context.AppSettings.FirstOrDefault();
 
-            // validate settings
             if (settings == null || string.IsNullOrWhiteSpace(settings.PinCode))
             {
-                ViewBag.Error = "No PIN has been configured in Settings.";
+                ViewBag.Error = "No PIN configured.";
                 return View();
             }
 
-            // compare clean values
             if (pin?.Trim() != settings.PinCode.Trim())
             {
                 ViewBag.Error = "Incorrect PIN";
@@ -144,34 +94,38 @@ namespace UrbanGadgetsMS.Controllers
             if (user == null)
                 return RedirectToAction("Login");
 
-            await SignUserIn(user);
+            await SignUserIn(user, user.BusinessId);
 
             HttpContext.Session.Remove("PendingUser");
-
-            TempData["Message"] = "Welcome back";
-            TempData["MessageType"] = "success";
 
             return RedirectToAction("Index", "Dashboard");
         }
 
-        private async Task SignUserIn(User user)
+        private async Task SignUserIn(User user, int? businessId)
         {
             var claims = new List<Claim>
-        {
-               new Claim(ClaimTypes.Name, user.Username),
-               new Claim(ClaimTypes.Role, user.Role),
-               new Claim("FullName", user.FullName ?? "")
-        };
+            {
+                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                 new Claim(ClaimTypes.Name, user.Username),
+                 new Claim(ClaimTypes.Role, user.Role),
+                 new Claim("FullName", user.FullName ?? "")
+            };
 
-            var identity = new ClaimsIdentity(
-                claims,
+            if (user.Role != "SuperAdmin")
+            {
+                claims.Add(new Claim("BusinessId", businessId?.ToString() ?? ""));
+            }
+            else
+            {
+                claims.Add(new Claim("BusinessId", ""));
+            }
+
+            var identity = new ClaimsIdentity(claims,
                 CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                principal);
+                new ClaimsPrincipal(identity));
         }
     }
 }

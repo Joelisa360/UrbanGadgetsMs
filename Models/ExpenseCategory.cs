@@ -1,6 +1,6 @@
 ﻿using UrbanGadgetsMS.Models;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public enum ExpenseCategory
     {

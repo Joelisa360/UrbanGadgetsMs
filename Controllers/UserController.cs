@@ -1,23 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 //using Org.BouncyCastle.Crypto.Generators;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class UsersController : Controller
+    public class UsersController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public UsersController(AppDbContext context)
+        : base(context)
         {
-            _context = context;
         }
-
         public IActionResult Cashiers()
         {
+            var user = GetCurrentUser();
+
+            if (user == null)
+                return RedirectToAction("Login", "Auth");
+
             var cashiers = _context.Users
-                .Where(x => x.Role == "Cashier")
+                .Where(x =>
+                    x.Role == "Cashier" &&
+                    x.BusinessId == CurrentBusinessId)
                 .OrderByDescending(x => x.CreatedAt)
                 .ToList();
 
@@ -36,6 +40,10 @@ namespace UrbanGadgetsMS.Controllers
                 return View(user);
 
             user.Role = "Cashier";
+            user.BusinessId = CurrentBusinessId; // 🔥 CRITICAL FIX
+            user.IsFirstLogin = false;
+            user.IsActive = true;
+
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
 
             _context.Users.Add(user);
@@ -49,7 +57,10 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult Toggle(int id)
         {
-            var user = _context.Users.Find(id);
+            var user = _context.Users
+                .FirstOrDefault(x =>
+                    x.Id == id &&
+                    x.BusinessId == CurrentBusinessId);
 
             if (user == null)
                 return RedirectToAction("Cashiers");
@@ -66,7 +77,10 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult ResetPassword(int id)
         {
-            var user = _context.Users.Find(id);
+            var user = _context.Users
+                .FirstOrDefault(x =>
+                    x.Id == id &&
+                    x.BusinessId == CurrentBusinessId);
 
             if (user == null)
             {
@@ -75,7 +89,6 @@ namespace UrbanGadgetsMS.Controllers
                 return RedirectToAction("Cashiers");
             }
 
-            // default password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
 
             _context.SaveChanges();

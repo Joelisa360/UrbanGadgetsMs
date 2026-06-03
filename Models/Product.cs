@@ -1,17 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 
-namespace UrbanGadgets.Models
+
+namespace UrbanGadgetsMS.Models
 {
     public class Product
     {
         public int Id { get; set; }
 
         [Required]
-        public string ProductName { get; set; }
+        public string? ProductName { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal BuyingPrice { get; set; }
@@ -30,5 +31,8 @@ namespace UrbanGadgets.Models
         //Navigation
         public List<RestockItem> RestockItems { get; set; }
     = new List<RestockItem>();
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

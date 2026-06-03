@@ -1,25 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class ProductsController : Controller
+    public class ProductsController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public ProductsController(AppDbContext context)
+        : base(context)
         {
-            _context = context;
-        }
 
+        }
         // LIST
         public IActionResult Index(string search, int? categoryId, int page = 1)
         {
             int pageSize = 10;
 
             var products = _context.Products
+                .Where(p => p.BusinessId == CurrentBusinessId)
                 .Include(p => p.Category)
                 .AsQueryable();
 
@@ -55,7 +55,7 @@ namespace UrbanGadgetsMS.Controllers
             ViewBag.CategoryId = categoryId;
 
             ViewBag.Categories = _context.Categories
-                .OrderBy(c => c.CategoryName)
+                .Where(c => c.BusinessId == CurrentBusinessId)
                 .ToList();
 
             return View(pagedProducts);
@@ -80,6 +80,7 @@ namespace UrbanGadgetsMS.Controllers
             }
 
             bool exists = _context.Products.Any(p =>
+                p.BusinessId == CurrentBusinessId &&
                 p.ProductName.Trim().ToLower() ==
                 product.ProductName.Trim().ToLower());
 
@@ -88,10 +89,14 @@ namespace UrbanGadgetsMS.Controllers
                 TempData["Message"] = "Product already exists";
                 TempData["MessageType"] = "warning";
 
-                ViewBag.Categories = _context.Categories.ToList();
+                ViewBag.Categories = _context.Categories
+                    .Where(c => c.BusinessId == CurrentBusinessId)
+                    .ToList();
+
                 return View(product);
             }
 
+            product.BusinessId = CurrentBusinessId;
             _context.Products.Add(product);
             _context.SaveChanges();
 
@@ -104,7 +109,10 @@ namespace UrbanGadgetsMS.Controllers
         // EDIT - GET
         public IActionResult Edit(int id)
         {
-            var product = _context.Products.Find(id);
+            var product = _context.Products
+                .FirstOrDefault(p =>
+                p.Id == id &&
+                p.BusinessId == CurrentBusinessId);
 
             if (product == null)
                 return NotFound();
@@ -126,7 +134,10 @@ namespace UrbanGadgetsMS.Controllers
                 return View(product);
             }
 
-            var existingProduct = _context.Products.FirstOrDefault(p => p.Id == product.Id);
+            var existingProduct = _context.Products
+                .FirstOrDefault(p =>
+                p.Id == product.Id &&
+                p.BusinessId == CurrentBusinessId);
 
             if (existingProduct == null)
             {
@@ -152,7 +163,10 @@ namespace UrbanGadgetsMS.Controllers
         // DELETE
         public IActionResult Delete(int id)
         {
-            var product = _context.Products.Find(id);
+            var product = _context.Products
+                .FirstOrDefault(p =>
+                p.Id == id &&
+                p.BusinessId == CurrentBusinessId);
 
             if (product == null)
             {
@@ -175,7 +189,9 @@ namespace UrbanGadgetsMS.Controllers
         {
             var items = _context.Products
                 .Include(p => p.Category)
-                .Where(p => p.Quantity <= 0)
+                .Where(p =>
+                p.BusinessId == CurrentBusinessId &&
+                p.Quantity <= 0)
                 .OrderBy(p => p.ProductName)
                 .ToList();
 

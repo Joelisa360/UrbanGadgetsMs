@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public class User
     {
@@ -11,7 +11,7 @@ namespace UrbanGadgets.Models
 
         [Required]
         public string Username { get; set; } = string.Empty;
-
+            
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
@@ -21,5 +21,9 @@ namespace UrbanGadgets.Models
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
+        public bool IsFirstLogin { get; set; }
     }
 }

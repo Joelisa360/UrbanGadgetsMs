@@ -15,5 +15,8 @@
         public bool IsAchieved { get; set; } = false;
 
         public string? Notes { get; set; }
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

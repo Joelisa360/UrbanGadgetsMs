@@ -1,35 +1,54 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using Microsoft.EntityFrameworkCore;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class ExpensesController : Controller
+    public class ExpensesController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public ExpensesController(AppDbContext context)
+            : base(context)
         {
-            _context = context;
         }
 
+        // ================= LIST =================
         public IActionResult Index()
         {
-            return View(_context.Expenses
+            var expenses = _context.Expenses
+                .Where(e => e.BusinessId == CurrentBusinessId)
                 .OrderByDescending(x => x.ExpenseDate)
-                .ToList());
+                .ToList();
+
+            return View(expenses);
         }
 
+        // ================= CREATE (GET) =================
         public IActionResult Create()
         {
             return View();
         }
 
+        // ================= CREATE (POST) =================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Expense expense)
         {
             if (!ModelState.IsValid)
                 return View(expense);
+
+            // 🔥 IMPORTANT: assign business
+            expense.BusinessId = CurrentBusinessId;
+
+            // safety check
+            if (expense.BusinessId == 0)
+            {
+                TempData["Message"] = "Invalid business session";
+                TempData["MessageType"] = "danger";
+                return RedirectToAction("Index");
+            }
+
+            expense.ExpenseDate = DateTime.UtcNow;
 
             _context.Expenses.Add(expense);
             _context.SaveChanges();
@@ -40,35 +59,55 @@ namespace UrbanGadgetsMS.Controllers
             return RedirectToAction("Index");
         }
 
+        // ================= DELETE =================
         public IActionResult Delete(int id)
         {
-            var expense = _context.Expenses.Find(id);
+            var expense = _context.Expenses
+                .FirstOrDefault(e =>
+                    e.Id == id &&
+                    e.BusinessId == CurrentBusinessId);
 
-            if (expense != null)
+            if (expense == null)
             {
-                _context.Expenses.Remove(expense);
-                _context.SaveChanges();
-
-                TempData["Message"] = "Expense deleted";
+                TempData["Message"] = "Expense not found";
                 TempData["MessageType"] = "danger";
+                return RedirectToAction("Index");
             }
+
+            _context.Expenses.Remove(expense);
+            _context.SaveChanges();
+
+            TempData["Message"] = "Expense deleted";
+            TempData["MessageType"] = "info";
 
             return RedirectToAction("Index");
         }
 
+        // ================= ALERT =================
         public IActionResult GetExpenseAlert()
         {
-            var month = DateTime.Today.AddMonths(-1);
+            var monthStart = new DateTime(
+                DateTime.UtcNow.Year,
+                DateTime.UtcNow.Month,
+                1,
+                0, 0, 0,
+                DateTimeKind.Utc
+            );
 
             var total = _context.Expenses
-                .Where(x => x.ExpenseDate >= month)
+                .Where(x =>
+                    x.BusinessId == CurrentBusinessId &&
+                    x.ExpenseDate >= monthStart)
                 .Sum(x => (decimal?)x.Amount) ?? 0;
 
-            var settings = _context.AppSettings.FirstOrDefault();
+            var settings = _context.AppSettings
+                .FirstOrDefault(x => x.BusinessId == CurrentBusinessId);
+
+            decimal limit = settings?.MonthlyExpenseLimit ?? 0;
 
             return Json(new
             {
-                exceeded = total > settings.MonthlyExpenseLimit,
+                exceeded = limit > 0 && total > limit,
                 total
             });
         }

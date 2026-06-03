@@ -1,29 +1,33 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 AppContext.SetSwitch("System.Net.Dns.UseIpv6", false);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-builder.WebHost.UseUrls($"http://*:{port}");
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
 
 // ================= SERVICES =================
 
 builder.Services.AddControllersWithViews();
 
-// Authentication
+// Authentication (IMPORTANT FIX HERE)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.LoginPath = "/Auth/Login";   // FIXED (you are using AuthController)
+        options.AccessDeniedPath = "/Auth/Login";
 
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
         options.Cookie.SameSite = SameSiteMode.Lax;
 
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
@@ -45,13 +49,11 @@ builder.Services.AddSession(options =>
 
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 builder.Services.AddAuthorization();
-
-// ================= BUILD APP =================
 
 var app = builder.Build();
 
@@ -63,29 +65,33 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // Apply migrations
         db.Database.Migrate();
 
-        // Load settings
-        var settings = db.AppSettings.FirstOrDefault();
+        // ================= SEED ADMIN (SAFE VERSION) =================
+        var superAdmin = db.Users.FirstOrDefault(x => x.Username == "superadmin");
 
-        int mins = 15;
+        if (superAdmin == null)
+        {
+            superAdmin = new User
+            {
+                Username = "superadmin",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("super123"),
+                Role = "SuperAdmin",
+                IsActive = true,
+                BusinessId = null// IMPORTANT: not tied to any business
+            };
 
-        if (settings?.AutoLogout == "5 Minutes")
-            mins = 5;
+            db.Users.Add(superAdmin);
+        }
+        else
+        {
+            superAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword("super123");
+            superAdmin.Role = "SuperAdmin";
+            superAdmin.IsActive = true;
+            superAdmin.BusinessId = null;
+        }
 
-        else if (settings?.AutoLogout == "15 Minutes")
-            mins = 15;
 
-        else if (settings?.AutoLogout == "30 Minutes")
-            mins = 30;
-
-        else if (settings?.AutoLogout == "Never")
-            mins = 1440;
-
-        Console.WriteLine($"Auto logout setting: {mins} minutes");
-
-        // Seed Admin User
         var user = db.Users.FirstOrDefault(x => x.Username == "admin");
 
         if (user == null)
@@ -95,16 +101,24 @@ try
                 Username = "admin",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
                 Role = "Admin",
-                IsActive = true
+                IsActive = true,
+                BusinessId = 1
             };
 
             db.Users.Add(user);
         }
         else
         {
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123");
             user.Role = "Admin";
             user.IsActive = true;
+
+            // ONLY set BusinessId if missing (prevents overwriting real data)
+            if (user.BusinessId == 0)
+            {
+                user.BusinessId = 1;
+            }
+
+            // DO NOT reset password every startup (this was breaking login logic)
         }
 
         db.SaveChanges();
@@ -135,23 +149,18 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseSession();
-
 app.UseAuthentication();
-
 app.UseAuthorization();
 
 // ================= ROUTES =================
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
-
-// ================= RUN =================
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 app.Run();

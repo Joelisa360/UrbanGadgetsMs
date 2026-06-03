@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using UrbanGadgets.Data;
+using UrbanGadgetsMS.Data;
 
 #nullable disable
 
@@ -22,7 +22,7 @@ namespace UrbanGadgetsMS.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("UrbanGadgets.Models.AppSetting", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.AppSetting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -40,6 +40,9 @@ namespace UrbanGadgetsMS.Migrations
                     b.Property<bool>("AutoPrintReceipt")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("CompactTables")
                         .HasColumnType("boolean");
 
@@ -50,6 +53,9 @@ namespace UrbanGadgetsMS.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("ExpenseAlerts")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsOnboardingComplete")
                         .HasColumnType("boolean");
 
                     b.Property<bool>("LowStockAlerts")
@@ -79,10 +85,12 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.ToTable("AppSettings");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Category", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Business", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -90,11 +98,39 @@ namespace UrbanGadgetsMS.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Businesses");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("CategoryName")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
 
                     b.HasIndex("CategoryName")
                         .IsUnique();
@@ -102,7 +138,7 @@ namespace UrbanGadgetsMS.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Expense", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Expense", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -112,6 +148,9 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Category")
                         .IsRequired()
@@ -125,21 +164,72 @@ namespace UrbanGadgetsMS.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.ToTable("Expenses");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Product", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.PendingRegistration", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Approved")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("BusinessName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Contact")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OtherName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Surname")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PendingRegistrations");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Product", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("BuyingPrice")
                         .HasColumnType("decimal(18,2)");
@@ -165,18 +255,23 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.RestockItem", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.RestockItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("BuyingPrice")
                         .HasColumnType("numeric(18,2)");
@@ -203,6 +298,8 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.HasIndex("ProductId");
 
                     b.HasIndex("RestockReportId");
@@ -210,13 +307,16 @@ namespace UrbanGadgetsMS.Migrations
                     b.ToTable("RestockItems");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.RestockReport", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.RestockReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
@@ -234,16 +334,44 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.ToTable("RestockReports");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Sale", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Sale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("CashierName")
                         .HasColumnType("text");
@@ -271,67 +399,11 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.HasIndex("ProductId");
 
                     b.ToTable("Sales");
-                });
-
-            modelBuilder.Entity("UrbanGadgets.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("UrbanGadgetsMS.Models.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("UrbanGadgetsMS.Models.SaleItem", b =>
@@ -341,6 +413,9 @@ namespace UrbanGadgetsMS.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer");
@@ -359,6 +434,8 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.HasIndex("ProductId");
 
                     b.HasIndex("SaleId");
@@ -373,6 +450,9 @@ namespace UrbanGadgetsMS.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -392,6 +472,8 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.HasIndex("ProductId");
 
                     b.ToTable("StockMovements");
@@ -407,6 +489,9 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp with time zone");
@@ -426,61 +511,166 @@ namespace UrbanGadgetsMS.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessId");
+
                     b.ToTable("Targets");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Product", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.User", b =>
                 {
-                    b.HasOne("UrbanGadgets.Models.Category", "Category")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BusinessId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFirstLogin")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BusinessId");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.AppSetting", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Category", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Expense", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Product", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.HasOne("UrbanGadgetsMS.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Business");
+
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.RestockItem", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.RestockItem", b =>
                 {
-                    b.HasOne("UrbanGadgets.Models.Product", "Product")
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.HasOne("UrbanGadgetsMS.Models.Product", "Product")
                         .WithMany("RestockItems")
                         .HasForeignKey("ProductId");
 
-                    b.HasOne("UrbanGadgets.Models.RestockReport", "RestockReport")
+                    b.HasOne("UrbanGadgetsMS.Models.RestockReport", "RestockReport")
                         .WithMany("Items")
                         .HasForeignKey("RestockReportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
 
                     b.Navigation("Product");
 
                     b.Navigation("RestockReport");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Sale", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.RestockReport", b =>
                 {
-                    b.HasOne("UrbanGadgets.Models.Product", "Product")
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Sale", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.HasOne("UrbanGadgetsMS.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
 
                     b.Navigation("Product");
                 });
 
             modelBuilder.Entity("UrbanGadgetsMS.Models.SaleItem", b =>
                 {
-                    b.HasOne("UrbanGadgets.Models.Product", "Product")
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.HasOne("UrbanGadgetsMS.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("UrbanGadgets.Models.Sale", "Sale")
+                    b.HasOne("UrbanGadgetsMS.Models.Sale", "Sale")
                         .WithMany()
                         .HasForeignKey("SaleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Business");
 
                     b.Navigation("Product");
 
@@ -489,21 +679,45 @@ namespace UrbanGadgetsMS.Migrations
 
             modelBuilder.Entity("UrbanGadgetsMS.Models.StockMovement", b =>
                 {
-                    b.HasOne("UrbanGadgets.Models.Product", "Product")
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.HasOne("UrbanGadgetsMS.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Business");
+
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.Product", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Target", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.User", b =>
+                {
+                    b.HasOne("UrbanGadgetsMS.Models.Business", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusinessId");
+
+                    b.Navigation("Business");
+                });
+
+            modelBuilder.Entity("UrbanGadgetsMS.Models.Product", b =>
                 {
                     b.Navigation("RestockItems");
                 });
 
-            modelBuilder.Entity("UrbanGadgets.Models.RestockReport", b =>
+            modelBuilder.Entity("UrbanGadgetsMS.Models.RestockReport", b =>
                 {
                     b.Navigation("Items");
                 });

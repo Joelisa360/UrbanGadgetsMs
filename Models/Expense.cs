@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using UrbanGadgetsMS.Models;
 
-namespace UrbanGadgets.Models
+
+namespace UrbanGadgetsMS.Models
 {
     public class Expense
     {
         public int Id { get; set; }
 
         [Required]
-        public string ExpenseName { get; set; }
+        public string? ExpenseName { get; set; }
 
         public decimal Amount { get; set; }
 
@@ -16,8 +16,11 @@ namespace UrbanGadgets.Models
 
         public DateTime ExpenseDate { get; set; } = DateTime.UtcNow;
 
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         public ExpenseCategory Category { get; set; }
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

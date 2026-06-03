@@ -1,37 +1,50 @@
-﻿@model UrbanGadgets.Models.Product
+﻿@model UrbanGadgetsMS.Models.Product
 
 @{
     ViewData["Title"] = "Create Product";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Create Product</h2>
+<h2 class="mb-3">Create Product</h2>
 
 <form asp-action="Create" method="post">
 
     <div class="mb-3">
-        <label>Product Name</label>
+        <label class="form-label">Product Name</label>
         <input asp-for="ProductName" class="form-control" />
+        <span asp-validation-for="ProductName" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Category</label>
-        <select asp-for="CategoryId" class="form-control"
+        <label class="form-label">Category</label>
+
+        <select asp-for="CategoryId"
+                class="form-select"
                 asp-items="@(new SelectList(ViewBag.Categories, "Id", "CategoryName"))">
+            <option value="">-- Select Category --</option>
         </select>
+
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Quantity</label>
-        <input asp-for="Quantity" class="form-control" />
+        <label class="form-label">Quantity</label>
+        <input asp-for="Quantity" type="number" class="form-control" />
+        <span asp-validation-for="Quantity" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Price</label>
-        <input asp-for="Price" class="form-control" />
+        <label class="form-label">Price</label>
+        <input asp-for="Price" type="number" step="0.01" class="form-control" />
+        <span asp-validation-for="Price" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-success">Save</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-success">
+        Save Product
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Cancel
+    </a>
 
 </form>

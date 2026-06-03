@@ -1,21 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
-//using iTextSharp.text;
-//using iTextSharp.text.pdf;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 using ClosedXML.Excel;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class SalesController : Controller
+    public class SalesController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public SalesController(AppDbContext context)
+        : base(context)
         {
-            _context = context;
         }
 
         // =========================
@@ -29,8 +25,9 @@ namespace UrbanGadgetsMS.Controllers
           DateTime? date)
         {
             var sales = _context.Sales
-                .Include(s => s.Product)
-                .AsQueryable();
+                 .Where(s => s.BusinessId == CurrentBusinessId)
+                 .Include(s => s.Product)
+                 .AsQueryable();
 
             // FILTER BY DATE
             if (date.HasValue)
@@ -76,7 +73,10 @@ namespace UrbanGadgetsMS.Controllers
         // =========================
         public IActionResult Sell(int productId)
         {
-            var product = _context.Products.FirstOrDefault(p => p.Id == productId);
+            var product = _context.Products
+                .FirstOrDefault(p =>
+                    p.Id == productId &&
+                    p.BusinessId == CurrentBusinessId);
 
             if (product == null)
             {
@@ -100,7 +100,10 @@ namespace UrbanGadgetsMS.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Sell(Sale sale)
         {
-            var product = _context.Products.FirstOrDefault(p => p.Id == sale.ProductId);
+            var product = _context.Products
+                .FirstOrDefault(p =>
+                p.Id == sale.ProductId &&
+                p.BusinessId == CurrentBusinessId);
 
             if (product == null)
             {
@@ -152,6 +155,9 @@ namespace UrbanGadgetsMS.Controllers
             // NEW: cashier
             sale.CashierName = User.Identity?.Name ?? "Admin";
 
+            // ✅ IMPORTANT: assign business
+            sale.BusinessId = CurrentBusinessId;
+
             // Save sale
             _context.Sales.Add(sale);
             _context.SaveChanges();
@@ -172,7 +178,10 @@ namespace UrbanGadgetsMS.Controllers
         // =========================
         public IActionResult Delete(int id)
         {
-            var sale = _context.Sales.Find(id);
+            var sale = _context.Sales
+                .FirstOrDefault(s =>
+                s.Id == id &&
+                s.BusinessId == CurrentBusinessId);
 
             if (sale == null)
             {
@@ -192,19 +201,30 @@ namespace UrbanGadgetsMS.Controllers
 
         public IActionResult Receipt(int id)
         {
-            var sale = _context.Sales.FirstOrDefault(s => s.Id == id);
+            var sale = _context.Sales
+                 .FirstOrDefault(s =>
+                 s.Id == id &&
+                 s.BusinessId == CurrentBusinessId); ;
 
             if (sale == null)
                 return NotFound();
 
             var product = _context.Products
-                .FirstOrDefault(p => p.Id == sale.ProductId);
+                .FirstOrDefault(p =>
+                p.Id == sale.ProductId &&
+                p.BusinessId == CurrentBusinessId);
 
             var category = product == null ? null : _context.Categories
-                .FirstOrDefault(c => c.Id == product.CategoryId);
+                .FirstOrDefault(c => c.Id == product.CategoryId &&
+                c.BusinessId == CurrentBusinessId);
+
+            var business = _context.Businesses
+                .FirstOrDefault(b => b.Id == CurrentBusinessId);
 
             ViewBag.Product = product;
             ViewBag.Category = category;
+            ViewBag.BusinessName = business?.BusinessName ?? "UrbanGadgets";
+
 
             return View(sale);
         }
@@ -212,12 +232,13 @@ namespace UrbanGadgetsMS.Controllers
         public IActionResult Leaderboard()
         {
             var data = _context.Sales
+                .Where(s => s.BusinessId == CurrentBusinessId)
                 .GroupBy(s => s.CashierName)
                 .Select(g => new
                 {
-                    Cashier = g.Key,
-                    TotalSales = g.Sum(x => x.TotalAmount),
-                    Transactions = g.Count()
+                Cashier = g.Key,
+                TotalSales = g.Sum(x => x.TotalAmount),
+                Transactions = g.Count()
                 })
                 .OrderByDescending(x => x.TotalSales)
                 .ToList();
@@ -229,6 +250,7 @@ namespace UrbanGadgetsMS.Controllers
         {
             var sales = _context.Sales
                 .Include(s => s.Product)
+                .Where(s => s.BusinessId == CurrentBusinessId)
                 .ToList();
 
             using var workbook = new XLWorkbook();

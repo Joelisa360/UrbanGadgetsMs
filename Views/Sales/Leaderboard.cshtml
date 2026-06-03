@@ -1,4 +1,4 @@
-﻿@model dynamic
+﻿@model IEnumerable<dynamic>
 
 @{
     ViewData["Title"] = "Cashier Leaderboard";
@@ -55,6 +55,7 @@
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
+                <th>#</th>
                 <th>Cashier</th>
                 <th>Total Sales</th>
                 <th>Transactions</th>
@@ -62,13 +63,30 @@
         </thead>
 
         <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        No cashier data available
+                    </td>
+                </tr>
+            }
+
+            @{
+                int rank = 1;
+            }
+
             @foreach (var c in Model)
             {
                 <tr>
+                    <td>@rank</td>
                     <td>@c.Cashier</td>
-                    <td>UGX @c.TotalSales.ToString("N0")</td>
+                    <td>
+                        UGX @((c.TotalSales ?? 0).ToString("N0"))
+                    </td>
                     <td>@c.Transactions</td>
                 </tr>
+                rank++;
             }
         </tbody>
     </table>

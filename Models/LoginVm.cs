@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UrbanGadgets.ViewModels
+namespace UrbanGadgetsMS.Models
 {
     public class LoginVM
     {

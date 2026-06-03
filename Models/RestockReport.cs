@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using UrbanGadgetsMS.Models;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public class RestockReport
     {
@@ -18,5 +18,8 @@ namespace UrbanGadgets.Models
 
         public List<RestockItem> Items { get; set; }
             = new List<RestockItem>();
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

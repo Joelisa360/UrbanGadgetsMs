@@ -1,22 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
-
+using Microsoft.EntityFrameworkCore;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class CategoriesController : Controller
+    public class CategoriesController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public CategoriesController(AppDbContext context)
+            : base(context)
         {
-            _context = context;
         }
 
+        // ================= LIST =================
         public IActionResult Index(string search, string sortOrder, int page = 1)
         {
             int pageSize = 10;
@@ -24,14 +22,15 @@ namespace UrbanGadgetsMS.Controllers
             ViewData["SortParam"] =
                 string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
 
-            var categories = _context.Categories.AsQueryable();
+            var categories = _context.Categories
+                .Where(c => c.BusinessId == CurrentBusinessId)
+                .AsQueryable();
 
             // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
                 categories = categories.Where(c =>
-                    c.CategoryName.ToLower()
-                    .Contains(search.ToLower()));
+                    c.CategoryName.ToLower().Contains(search.ToLower()));
             }
 
             // SORT
@@ -39,10 +38,8 @@ namespace UrbanGadgetsMS.Controllers
                 ? categories.OrderByDescending(c => c.CategoryName)
                 : categories.OrderBy(c => c.CategoryName);
 
-            // TOTAL ITEMS
             int totalItems = categories.Count();
 
-            // PAGINATION
             var data = categories
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -58,18 +55,24 @@ namespace UrbanGadgetsMS.Controllers
             return View(data);
         }
 
+        // ================= CREATE (GET) =================
         public IActionResult Create()
         {
             return View();
         }
 
+        // ================= CREATE (POST) =================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Create(Category category)
         {
             if (!ModelState.IsValid)
                 return View(category);
 
+            category.BusinessId = CurrentBusinessId;
+
             bool exists = _context.Categories.Any(c =>
+                c.BusinessId == CurrentBusinessId &&
                 c.CategoryName.Trim().ToLower() ==
                 category.CategoryName.Trim().ToLower());
 
@@ -89,20 +92,39 @@ namespace UrbanGadgetsMS.Controllers
             return RedirectToAction("Index");
         }
 
+        // ================= EDIT (GET) =================
         public IActionResult Edit(int id)
         {
-            var category = _context.Categories.Find(id);
+            var category = _context.Categories
+                .FirstOrDefault(c =>
+                    c.Id == id &&
+                    c.BusinessId == CurrentBusinessId);
+
+            if (category == null)
+                return NotFound();
+
             return View(category);
         }
 
+        // ================= EDIT (POST) =================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Edit(Category category)
         {
             if (!ModelState.IsValid)
                 return View(category);
 
+            var existing = _context.Categories
+                .FirstOrDefault(c =>
+                    c.Id == category.Id &&
+                    c.BusinessId == CurrentBusinessId);
+
+            if (existing == null)
+                return NotFound();
+
             bool exists = _context.Categories.Any(c =>
                 c.Id != category.Id &&
+                c.BusinessId == CurrentBusinessId &&
                 c.CategoryName.Trim().ToLower() ==
                 category.CategoryName.Trim().ToLower());
 
@@ -113,7 +135,8 @@ namespace UrbanGadgetsMS.Controllers
                 return View(category);
             }
 
-            _context.Categories.Update(category);
+            existing.CategoryName = category.CategoryName;
+
             _context.SaveChanges();
 
             TempData["Message"] = "Category updated successfully";
@@ -122,17 +145,39 @@ namespace UrbanGadgetsMS.Controllers
             return RedirectToAction("Index");
         }
 
+        // ================= DELETE =================
         public IActionResult Delete(int id)
         {
-            var category = _context.Categories.Find(id);
+            var category = _context.Categories
+                .FirstOrDefault(c =>
+                    c.Id == id &&
+                    c.BusinessId == CurrentBusinessId);
+
+            if (category == null)
+                return NotFound();
+
+            return View(category);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteConfirmed(int id)
+        {
+            var category = _context.Categories
+                .FirstOrDefault(c =>
+                    c.Id == id &&
+                    c.BusinessId == CurrentBusinessId);
+
+            if (category == null)
+                return NotFound();
+
             _context.Categories.Remove(category);
             _context.SaveChanges();
 
             TempData["Message"] = "Category deleted successfully";
             TempData["MessageType"] = "danger";
 
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
     }
 }

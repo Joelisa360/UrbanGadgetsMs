@@ -1,39 +1,44 @@
-﻿@model UrbanGadgets.Models.Expense
-@using UrbanGadgets.Models
-
+﻿@model UrbanGadgetsMS.Models.Expense
+@using UrbanGadgetsMS.Models
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Add Expense</h2>
+<h2 class="mb-3">Add Expense</h2>
 
 <form asp-action="Create" method="post">
 
     <div class="mb-3">
-        <label>Name</label>
+        <label class="form-label">Expense Name</label>
         <input asp-for="ExpenseName" class="form-control" />
+        <span asp-validation-for="ExpenseName" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label>Amount</label>
-        <input asp-for="Amount" class="form-control" />
+        <label class="form-label">Amount</label>
+        <input asp-for="Amount" type="number" class="form-control" />
+        <span asp-validation-for="Amount" class="text-danger"></span>
     </div>
 
-    <div class="form-group">
-    <label>Expense Category</label>
+    <div class="mb-3">
+        <label class="form-label">Expense Category</label>
 
-    <select asp-for="Category" class="form-control"
-            asp-items="Html.GetEnumSelectList<ExpenseCategory>()">
-    </select>
-</div>
+        <select asp-for="Category"
+                class="form-control"
+                asp-items="Html.GetEnumSelectList<ExpenseCategory>()">
+        </select>
+
+        <span asp-validation-for="Category" class="text-danger"></span>
+    </div>
 
     <div class="mb-3">
-        <label>Notes</label>
+        <label class="form-label">Notes</label>
         <textarea asp-for="Notes" class="form-control"></textarea>
+        <span asp-validation-for="Notes" class="text-danger"></span>
     </div>
 
-    <button class="btn btn-danger">
+    <button type="submit" class="btn btn-danger">
         Save Expense
     </button>
 

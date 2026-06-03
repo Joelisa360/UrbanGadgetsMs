@@ -1,4 +1,4 @@
-﻿using UrbanGadgets.Models;
+﻿
 
 namespace UrbanGadgetsMS.Models
 {
@@ -19,5 +19,8 @@ namespace UrbanGadgetsMS.Models
         public decimal UnitPrice { get; set; }
 
         public decimal TotalPrice { get; set; }
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

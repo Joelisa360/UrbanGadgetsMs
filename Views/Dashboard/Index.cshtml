@@ -1,12 +1,26 @@
-﻿@using UrbanGadgets.Data
+﻿@using System.Security.Claims
+@using UrbanGadgetsMS.Data
 @inject AppDbContext _context
 
 @{
-    var settings = _context.AppSettings.FirstOrDefault();
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    int businessId = 0;
+
+    var businessClaim = User.FindFirst("BusinessId");
+
+    if (businessClaim != null)
+    {
+        int.TryParse(businessClaim.Value, out businessId);
+    }
+
+    var settings = businessId > 0
+        ? _context.AppSettings.FirstOrDefault(x => x.BusinessId == businessId)
+        : null;
 
     bool isAdmin = User.IsInRole("Admin");
 }
+
 
 <style>
     .stat-card {
@@ -99,7 +113,10 @@
 
         <div>
             <h2 class="fw-bold mb-1 text-dark">
-                Welcome, @(User?.Identity?.Name ?? "User")
+                Welcome,
+                @(User.FindFirst("FullName")?.Value
+                                ?? User.Identity?.Name
+                                ?? "User")
             </h2>
 
             <p class="text-muted mb-0 fs-5">
@@ -107,14 +124,14 @@
             </p>
         </div>
 
-        @if (ViewBag.TargetReached == true)
+        @* @if (ViewBag.TargetReached == true)
         {
             <div id="targetAlert" class="alert alert-success mt-3">
                 🎉 Bravo! You’ve hit your monthly target!
             </div>
-        }
+        } *@
 
-        <a asp-controller="Account"
+        <a asp-controller="Auth"
            asp-action="Logout"
            class="btn btn-danger rounded-pill px-4 py-2">
             Logout
@@ -366,12 +383,19 @@
 </div>
 
 <script>
+        let salesChart;
+    let topProductsChart;
+    let expensePieChart; 
 
     document.addEventListener("DOMContentLoaded", function () {
 
         loadDashboard();
         loadSalesChart();
         loadTopProducts();
+
+            setInterval(() => {
+        loadDashboard();
+    }, 30000);
 
         var lowStock =
             @(settings?.LowStockAlerts == true ? "true" : "false");
@@ -397,7 +421,6 @@
 
         // TODAY SALES
         if (document.getElementById("dailySales")) {
-
             document.getElementById("dailySales").innerText =
                 "UGX " + (data.daily ?? 0).toLocaleString();
         }
@@ -496,10 +519,25 @@
         }
 
         // EXPENSE PIE CHART
-        if (document.getElementById("expensePieChart")
-            && data.byCategory?.length) {
+        if (document.getElementById("expensePieChart")) {
 
-            new Chart(document.getElementById("expensePieChart"), {
+            if (!data.byCategory?.length) {
+
+                document.querySelector(".pie-wrapper")
+                .innerHTML =
+                "<p class='text-muted mt-5'>No expense data available.</p>";
+
+                return;
+            }
+
+               if (expensePieChart) {
+                expensePieChart.destroy();
+            
+               }
+
+                expensePieChart = new Chart(
+                document.getElementById("expensePieChart"),
+                {   
 
                 type: "pie",
 
@@ -510,7 +548,7 @@
                         data: data.byCategory.map(x => x.total)
                     }]
                 }
-            });
+                });
         }
     }
 
@@ -523,7 +561,13 @@
         const res = await fetch('/Home/GetSalesChart');
         const data = await res.json();
 
-        new Chart(document.getElementById("salesChart"), {
+            if (salesChart) {
+        salesChart.destroy();
+        }
+
+            salesChart = new Chart(
+        document.getElementById("salesChart"),
+        {
 
             type: "line",
 
@@ -548,7 +592,13 @@
         const res = await fetch('/Home/GetTopProducts');
         const data = await res.json();
 
-        new Chart(document.getElementById("topProductsChart"), {
+            if (topProductsChart) {
+            topProductsChart.destroy();
+        }
+
+        topProductsChart = new Chart(
+        document.getElementById("topProductsChart"),
+        {
 
             type: "bar",
 
@@ -575,17 +625,21 @@
                 .classList.remove("d-none");
 
             document.getElementById("lowStockAlert").innerHTML =
-                "<strong>Low Stock Alert</strong><br>" +
-                data.map(p =>
-                    `${p.name} (Stock: ${p.qty})`
-                ).join("<br>");
+             "<strong>Low Stock Alert</strong><br>" +
+            data.map(p =>
+            `${p.name} (Stock: ${p.qty})`
+            ).join("<br>") +
+                    "<br><br>" +
+            "<a href='/Products/OutOfStock' class='btn btn-sm btn-warning'>" +
+            "View Products" +
+            "</a>";
         }
     }
 
 
     async function checkExpenseAlert() {
 
-        const res = await fetch('/Home/GetExpenseAlert');
+        const res = await fetch('/Expenses/GetExpenseAlert');
         const data = await res.json();
 
         if (data.exceeded) {

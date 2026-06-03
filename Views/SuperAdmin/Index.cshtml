@@ -1,0 +1,117 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Super Admin Dashboard";
+}
+
+<h2 style="margin-bottom:20px;">Super Admin Dashboard</h2>
+
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .dash-card {
+        height: 140px; /* 👈 makes ALL cards same height */
+        padding: 18px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+        display: flex; /* 👈 vertical alignment fix */
+        flex-direction: column;
+        justify-content: center; /* center content nicely */
+    }
+
+        .dash-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .dash-title {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .dash-value {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 5px 0;
+    }
+
+    .dash-sub {
+        font-size: 12px;
+        opacity: 0.85;
+    }
+
+    /* COLORS */
+    .blue {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .green {
+        background: linear-gradient(135deg, #22c55e, #15803d);
+    }
+
+    .orange {
+        background: linear-gradient(135deg, #f97316, #c2410c);
+    }
+
+    .purple {
+        background: linear-gradient(135deg, #a855f7, #6b21a8);
+    }
+
+    .red {
+        background: linear-gradient(135deg, #ef4444, #991b1b);
+    }
+
+    .dark {
+        background: linear-gradient(135deg, #374151, #111827);
+    }
+</style>
+
+<div class="dashboard-grid">
+
+    <!-- BUSINESSES -->
+    <div class="dash-card blue">
+        <div class="dash-title">Total Businesses</div>
+        <div class="dash-value">@ViewBag.Businesses</div>
+        <div class="dash-sub">All registered companies</div>
+    </div>
+
+    <!-- USERS -->
+    <div class="dash-card green">
+        <div class="dash-title">Total Users</div>
+        <div class="dash-value">@ViewBag.Users</div>
+        <div class="dash-sub">Admins + Cashiers</div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="dash-card orange">
+        <div class="dash-title">Total Revenue</div>
+        <div class="dash-value">UGX @ViewBag.Revenue</div>
+        <div class="dash-sub">Platform-wide sales</div>
+    </div>
+
+    <!-- ACTIVE -->
+    <div class="dash-card purple">
+        <div class="dash-title">Active Businesses</div>
+        <div class="dash-value">@ViewBag.ActiveBusinesses</div>
+        <div class="dash-sub">Currently running accounts</div>
+    </div>
+
+    <!-- SUSPENDED -->
+    <div class="dash-card red">
+        <div class="dash-title">Suspended Businesses</div>
+        <div class="dash-value">@ViewBag.SuspendedBusinesses</div>
+        <div class="dash-sub">Disabled accounts</div>
+    </div>
+
+    <!-- PENDING -->
+    <div class="dash-card dark">
+        <div class="dash-title">Pending Approvals</div>
+        <div class="dash-value">@ViewBag.PendingRegistrations</div>
+        <div class="dash-sub">Waiting for approval</div>
+    </div>
+
+</div>

@@ -1,18 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class ReportController : Controller
+    public class ReportController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public ReportController(AppDbContext context)
+        : base(context)
         {
-            _context = context;
         }
 
 
@@ -32,7 +30,8 @@ namespace UrbanGadgetsMS.Controllers
             // DAILY SALES
             ViewBag.DailySales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate >= todayStart &&
+                .Where(x => x.BusinessId == CurrentBusinessId &&
+                            x.SaleDate >= todayStart &&
                             x.SaleDate < tomorrow)
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
@@ -40,7 +39,8 @@ namespace UrbanGadgetsMS.Controllers
             // WEEKLY SALES
             ViewBag.WeeklySales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate >= weekStart &&
+                .Where(x => x.BusinessId == CurrentBusinessId &&
+                            x.SaleDate >= weekStart &&
                             x.SaleDate < tomorrow)
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
@@ -54,8 +54,9 @@ namespace UrbanGadgetsMS.Controllers
                 var filterEnd = filterStart.AddDays(1);
 
                 ViewBag.Restocks = _context.RestockReports
-                    .Where(x => x.ReportDate >= filterStart &&
-                                x.ReportDate < filterEnd)
+                    .Where(x => x.BusinessId == CurrentBusinessId &&
+                        x.ReportDate >= filterStart &&
+                        x.ReportDate < filterEnd)
                     .OrderByDescending(x => x.ReportDate)
                     .ToList();
 
@@ -64,14 +65,15 @@ namespace UrbanGadgetsMS.Controllers
             else
             {
                 ViewBag.Restocks = _context.RestockReports
-                    .OrderByDescending(x => x.ReportDate)
-                    .Take(5)
-                    .ToList();
-
+                     .Where(x => x.BusinessId == CurrentBusinessId)
+                     .OrderByDescending(x => x.ReportDate)
+                     .Take(5)
+                     .ToList();
                 ViewBag.RestockDate = "";
             }
 
             ViewBag.Categories = _context.Categories
+                .Where(x => x.BusinessId == CurrentBusinessId)
                 .OrderBy(x => x.CategoryName)
                 .ToList();
 
@@ -87,9 +89,13 @@ namespace UrbanGadgetsMS.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult CreateRestock()
         {
-            ViewBag.Categories = _context.Categories.ToList();
-            ViewBag.Products = _context.Products.ToList();
+            ViewBag.Categories = _context.Categories
+                .Where(x => x.BusinessId == CurrentBusinessId)
+                .ToList();
 
+            ViewBag.Products = _context.Products
+                .Where(x => x.BusinessId == CurrentBusinessId)
+                .ToList();
             return View();
         }
 
@@ -105,17 +111,22 @@ namespace UrbanGadgetsMS.Controllers
 
             foreach (var item in report.Items)
             {
+                item.BusinessId = CurrentBusinessId;
+
                 total += item.Quantity * item.BuyingPrice;
 
                 // CATEGORY
                 var category = _context.Categories
-                    .FirstOrDefault(x => x.CategoryName == item.CategoryName);
+                    .FirstOrDefault(x =>
+                    x.BusinessId == CurrentBusinessId &&
+                    x.CategoryName.ToLower() == item.CategoryName.ToLower());
 
                 if (category == null)
                 {
                     category = new Category
                     {
-                        CategoryName = item.CategoryName
+                        CategoryName = item.CategoryName,
+                        BusinessId = CurrentBusinessId
                     };
 
                     _context.Categories.Add(category);
@@ -124,7 +135,9 @@ namespace UrbanGadgetsMS.Controllers
 
                 // PRODUCT
                 var product = _context.Products
-                    .FirstOrDefault(x => x.ProductName == item.ProductName);
+                    .FirstOrDefault(x =>
+                    x.BusinessId == CurrentBusinessId &&
+                    x.ProductName == item.ProductName);
 
                 if (product == null)
                 {
@@ -135,7 +148,8 @@ namespace UrbanGadgetsMS.Controllers
                         Quantity = item.Quantity,
                         BuyingPrice = item.BuyingPrice > 0 ? item.BuyingPrice : 0,
                         Price = item.Price > 0 ? item.Price : 0,
-                        DateAdded = DateTime.UtcNow
+                        DateAdded = DateTime.UtcNow,
+                        BusinessId = CurrentBusinessId
                     };
 
                     _context.Products.Add(product);
@@ -173,7 +187,7 @@ namespace UrbanGadgetsMS.Controllers
             }
 
             report.TotalAmount = total;
-
+            report.BusinessId = CurrentBusinessId;
             _context.RestockReports.Add(report);
             _context.SaveChanges();
 
@@ -189,7 +203,9 @@ namespace UrbanGadgetsMS.Controllers
         {
             var report = _context.RestockReports
                 .Include(r => r.Items)
-                .FirstOrDefault(r => r.Id == id);
+                .FirstOrDefault(r =>
+                r.Id == id &&
+                r.BusinessId == CurrentBusinessId);
 
             if (report == null)
                 return NotFound();
@@ -200,12 +216,13 @@ namespace UrbanGadgetsMS.Controllers
 
 
         [HttpGet]
-        public IActionResult GetProductInfo(string name)
+        public IActionResult GetProductInfo(int id)
         {
             var product = _context.Products
                 .Include(x => x.Category)
-                .FirstOrDefault(x => x.ProductName == name);
-
+                .FirstOrDefault(x =>
+                    x.Id == id &&
+                    x.BusinessId == CurrentBusinessId);
             if (product == null)
                 return Json(null);
 
@@ -232,8 +249,10 @@ namespace UrbanGadgetsMS.Controllers
 
             var sales = _context.Sales
                 .Include(x => x.Product)
-                .Where(x => x.SaleDate >= start &&
-                            x.SaleDate < end)
+                .Where(x =>
+                x.BusinessId == CurrentBusinessId &&
+                x.SaleDate >= start &&
+                x.SaleDate < end)
                 .OrderByDescending(x => x.SaleDate)
                 .ToList();
 

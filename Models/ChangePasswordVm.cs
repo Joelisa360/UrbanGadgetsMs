@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public class ChangePasswordVM
     {

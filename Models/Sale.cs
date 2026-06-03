@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace UrbanGadgets.Models
+
+namespace UrbanGadgetsMS.Models
 {
     public class Sale
     {
@@ -25,5 +26,8 @@ namespace UrbanGadgets.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Profit { get; set; }
         public decimal Discount { get; set; }
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

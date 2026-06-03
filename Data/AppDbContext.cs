@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using UrbanGadgets.Models;
 using UrbanGadgetsMS.Models;
 
-namespace UrbanGadgets.Data
+namespace UrbanGadgetsMS.Data
 {
     public class AppDbContext : DbContext
     {
@@ -35,6 +34,9 @@ namespace UrbanGadgets.Data
         public DbSet<Role> Roles { get; set; }
 
         public DbSet<Target> Targets { get; set; }
+        public DbSet<Business> Businesses { get; set; }
+
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; }
 
 
 

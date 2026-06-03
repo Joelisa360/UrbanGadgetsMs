@@ -1,26 +1,27 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using UrbanGadgets.Data;
-using UrbanGadgets.Models;
+using UrbanGadgetsMS.Data;
+using UrbanGadgetsMS.Models;
 
 namespace UrbanGadgetsMS.Controllers
 {
-    public class SettingsController : Controller
+    public class SettingsController : BaseController
     {
-        private readonly AppDbContext _context;
-
         public SettingsController(AppDbContext context)
+        : base(context)
         {
-            _context = context;
         }
 
         public IActionResult Index()
         {
-            var settings = _context.AppSettings.FirstOrDefault();
+            var settings = _context.AppSettings
+                .FirstOrDefault(x => x.BusinessId == CurrentBusinessId);
 
             if (settings == null)
             {
                 settings = new AppSetting
                 {
+                    BusinessId = CurrentBusinessId, // 🔥 CRITICAL FIX
+
                     DarkMode = false,
                     CompactTables = true,
                     ThemeColor = "Blue",
@@ -44,10 +45,12 @@ namespace UrbanGadgetsMS.Controllers
         [HttpPost]
         public IActionResult Save(AppSetting model)
         {
-            var settings = _context.AppSettings.FirstOrDefault();
+            var settings = _context.AppSettings
+                .FirstOrDefault(x => x.BusinessId == CurrentBusinessId);
 
             if (settings == null)
             {
+                model.BusinessId = CurrentBusinessId; // 🔥 CRITICAL FIX
                 _context.AppSettings.Add(model);
             }
             else
@@ -64,8 +67,8 @@ namespace UrbanGadgetsMS.Controllers
 
                 // Security
                 settings.PinLock = model.PinLock;
-                settings.PinCode = model.PinCode;                 
-                settings.RequirePinOnLogin = model.RequirePinOnLogin; 
+                settings.PinCode = model.PinCode;
+                settings.RequirePinOnLogin = model.RequirePinOnLogin;
                 settings.AutoLogout = model.AutoLogout;
 
                 // Sales
@@ -73,8 +76,8 @@ namespace UrbanGadgetsMS.Controllers
                 settings.ConfirmBeforeSale = model.ConfirmBeforeSale;
                 settings.AllowDiscounts = model.AllowDiscounts;
 
-                // Expense Limit
-                settings.MonthlyExpenseLimit = model.MonthlyExpenseLimit; 
+                // Limits
+                settings.MonthlyExpenseLimit = model.MonthlyExpenseLimit;
                 settings.MonthlySalesTarget = model.MonthlySalesTarget;
             }
 

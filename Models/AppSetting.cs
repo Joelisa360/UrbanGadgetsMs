@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public class AppSetting
     {
@@ -29,5 +29,10 @@ namespace UrbanGadgets.Models
 
         public decimal MonthlyExpenseLimit { get; set; }
         public decimal MonthlySalesTarget { get; set; }
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
+
+        public bool IsOnboardingComplete { get; set; }
     }
 }

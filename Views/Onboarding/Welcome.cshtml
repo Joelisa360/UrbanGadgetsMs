@@ -1,0 +1,212 @@
+﻿@{
+    ViewData["Title"] = "Welcome";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    
+}
+
+<style>
+    .onboarding-wrapper {
+        max-width: 900px;
+        margin: auto;
+        padding: 30px 15px;
+    }
+
+    .hero-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 35px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .hero-title {
+        font-size: 26px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .hero-sub {
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+    .business-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #0d6efd;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .task-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .task-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+        transition: 0.2s;
+    }
+
+        .task-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .task-card a {
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+    .finish-box {
+        text-align: center;
+        margin-top: 30px;
+    }
+
+    .btn-get-started {
+        padding: 10px 25px;
+        border-radius: 10px;
+    }
+
+    .task-card {
+        transition: .3s;
+        border: 2px solid transparent;
+    }
+
+    .task-card.active {
+        border: 2px solid #0d6efd;
+        transform: scale(1.03);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    .task-card.done {
+        border: 2px solid #198754;
+        opacity: 0.8;
+    }
+
+</style>
+
+<div class="onboarding-wrapper">
+
+    <!-- HERO SECTION -->
+    <div class="hero-card">
+
+        <h2 class="hero-title">
+            Welcome, @ViewBag.BusinessName
+        </h2>
+
+        <div class="welcome-subtitle">
+            Let’s get started with setting up and customizing your business system.
+        </div>
+
+        <p class="text-muted mb-4">
+            You are one step away from running your business system efficiently.
+        </p>
+
+        <a class="btn btn-primary btn-get-started"
+           href="/Onboarding/Welcome">
+            Get Started
+        </a>
+
+    </div>
+
+
+    @* <a class="btn btn-outline-secondary"
+       href="/Onboarding/Skip">
+        Skip
+    </a> *@
+
+    <!-- SETUP SECTION -->
+    <div>
+
+        <div class="section-title">
+            Setup Your Business
+        </div>
+
+        <div class="task-grid">
+
+            <div class="task-card" data-step="categories">
+                <div><strong>Categories</strong></div>
+                <small class="text-muted">Organize your products</small><br>
+                <a class="btn btn-outline-primary btn-sm"
+                   href="/Categories/Create">
+                    Add Categories
+                </a>
+            </div>
+
+            <div class="task-card" data-step="cashiers">
+                <div><strong>Cashiers</strong></div>
+                <small class="text-muted">Manage staff access</small><br>
+                <a class="btn btn-outline-primary btn-sm"
+                   href="/Users/Cashiers">
+                    Add Cashiers
+                </a>
+            </div>
+
+            <div class="task-card" data-step="settings">
+                <div><strong>Settings</strong></div>
+                <small class="text-muted">Configure business rules</small><br>
+                <a class="btn btn-outline-primary btn-sm"
+                   href="/Settings/Index">
+                    Change Settings
+                </a>
+            </div>
+
+            <div class="task-card" data-step="restock">
+                <div><strong>Restock</strong></div>
+                <small class="text-muted">Initialize inventory</small><br>
+                <a class="btn btn-outline-primary btn-sm"
+                   href="/Report/CreateRestock">
+                    Create First Restock
+                </a>
+            </div>
+
+        </div>
+
+        <!-- FINISH -->
+        <div class="finish-box">
+
+            <form method="post" action="/Onboarding/Finish">
+                <button class="btn btn-success btn-lg px-4">
+                    Finish Setup
+                </button>
+            </form>
+
+            <small class="text-muted d-block mt-2">
+                You must complete required setup before finishing.
+            </small>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const step = "@ViewBag.Step";
+
+        const activeCard = document.querySelector(`[data-step="${step}"]`);
+
+        if (activeCard) {
+            activeCard.classList.add("active");
+
+            activeCard.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+    });
+</script>

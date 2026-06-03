@@ -1,4 +1,4 @@
-﻿using UrbanGadgets.Models;
+﻿
 
 namespace UrbanGadgetsMS.Models
 {
@@ -22,5 +22,8 @@ namespace UrbanGadgetsMS.Models
         public string? Notes { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

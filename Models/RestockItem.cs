@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using UrbanGadgetsMS.Models;
 
-namespace UrbanGadgets.Models
+namespace UrbanGadgetsMS.Models
 {
     public class RestockItem
     {
@@ -27,5 +28,8 @@ namespace UrbanGadgets.Models
 
         [NotMapped]
         public decimal Total => Quantity * BuyingPrice;
+
+        public int? BusinessId { get; set; }
+        public Business? Business { get; set; }
     }
 }

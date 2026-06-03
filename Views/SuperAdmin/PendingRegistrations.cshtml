@@ -1,0 +1,175 @@
+﻿@model IEnumerable<UrbanGadgetsMS.Models.PendingRegistration>
+
+@{
+    ViewData["Title"] = "Pending Registrations";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            <i class="fa-solid fa-user-clock me-2"></i>
+            Pending Registrations
+        </h5>
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Business</th>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th width="120" class="text-center">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.BusinessName</strong>
+                            </td>
+
+                            <td>@item.Username</td>
+
+                            <td>
+                                <span class="badge bg-warning text-dark">
+                                    Pending
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+                                <button class="btn btn-primary btn-sm view-btn"
+                                        data-id="@item.Id">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="requestModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content rounded-3">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Registration Details</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="requestDetails">
+                Loading...
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">
+    @Html.AntiForgeryToken()
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        document.querySelectorAll(".view-btn").forEach(btn => {
+            btn.addEventListener("click", function () {
+
+                const id = this.dataset.id;
+                viewRequest(id);
+
+            });
+        });
+
+    });
+
+    async function viewRequest(id) {
+
+        const res = await fetch(`/SuperAdmin/GetPendingDetails?id=${id}`);
+        const data = await res.json();
+        const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
+
+        document.getElementById("requestDetails").innerHTML = `
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="text-muted">Business</label>
+                    <div class="fw-bold">${data.businessName}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted">Username</label>
+                    <div class="fw-bold">${data.username}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted">Name</label>
+                    <div>${data.surname} ${data.otherName}</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="text-muted">Contact</label>
+                    <div>${data.contact}</div>
+                </div>
+
+                <div class="col-12">
+                    <label class="text-muted">Email</label>
+                    <div>${data.email}</div>
+                </div>
+
+                <div class="col-12">
+                    <label class="text-muted">Requested</label>
+                    <div>${data.requestedAt}</div>
+                </div>
+
+            </div>
+
+            <hr />
+
+            <form method="post" action="/SuperAdmin/Approve">
+
+                <input type="hidden" name="id" value="${data.id}" />
+                <input type="hidden" name="__RequestVerificationToken" value="${token}" />
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select mb-3">
+                    <option value="Admin">Admin</option>
+                    <option value="Cashier">Cashier</option>
+                </select>
+
+                <button class="btn btn-success w-100 mb-2">
+                    Approve
+                </button>
+            </form>
+
+            <form method="post"
+                  action="/SuperAdmin/Reject"
+                  onsubmit="return confirm('Reject this request?');">
+                <input type="hidden" name="__RequestVerificationToken" value="${token}" />
+                <input type="hidden" name="id" value="${data.id}" />
+
+                <button class="btn btn-danger w-100">
+                    Reject
+                </button>
+            </form>
+        `;
+
+        new bootstrap.Modal(document.getElementById('requestModal')).show();
+    }
+</script>

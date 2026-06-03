@@ -1,10 +1,10 @@
-﻿@model UrbanGadgets.Models.Sale
-@using UrbanGadgets.Data
+﻿@model UrbanGadgetsMS.Models.Sale
+@using UrbanGadgetsMS.Data
 @inject AppDbContext _context
 
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    var product = ViewBag.Product as UrbanGadgets.Models.Product;
+    var product = ViewBag.Product as UrbanGadgetsMS.Models.Product;
     var settings = _context.AppSettings.FirstOrDefault();
 }
 
